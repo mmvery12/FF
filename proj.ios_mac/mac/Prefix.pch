@@ -1,0 +1,14 @@
+//
+// Prefix header for all source files of the 'Paralaxer' target in the 'Paralaxer' project
+//
+
+#ifdef __OBJC__
+	#import <Cocoa/Cocoa.h>
+#import "help.h"
+#import "define.h"
+#define Scale [[UIScreen mainScreen] scale]
+#endif
+
+#ifdef __cplusplus
+	#include "cocos2d.h"
+#endif
