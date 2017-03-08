@@ -1,6 +1,7 @@
 #include <map>
 #include <list>
 using namespace std;
+#define CELLNUM 9
 typedef int column;
 typedef int row;
 typedef multimap<column,row> Deletemultimap;

@@ -107,7 +107,7 @@ namespace Game
 	}
 	void Category::RowC(Deletemultimap &dprow,Deletemultimap &dpcolumn,DeleteReturnMap returnMap)
 	{
-		for (int i=0;i<7;i++)
+		for (int i=0;i<CELLNUM;i++)
 		{
 			int colcount=dprow.count(i);
 			if (colcount==0)
@@ -164,7 +164,7 @@ namespace Game
 	}
 	void Category::ColumnC(Deletemultimap &dpcolumn,Deletemultimap &dprow,DeleteReturnMap returnMap)
 	{
-		for (int i=0;i<7;i++)
+		for (int i=0;i<CELLNUM;i++)
 		{
 			int count=dpcolumn.count(i);
 			if (count==0)
