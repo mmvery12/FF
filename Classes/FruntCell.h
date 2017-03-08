@@ -99,7 +99,7 @@ namespace Game {
         bool _canTouch;
         void registDelegate(ClickDelegate *layer);
         void setCellStatus(CellStatus status);
-        
+        int dropPreVi;//1:left,2:Ver,3:right
         
         CREATE_FUNC(FruntCell);
         //virtual void registerWithTouchDispatcher(void);

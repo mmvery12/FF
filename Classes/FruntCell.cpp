@@ -18,7 +18,7 @@ namespace Game {
     {
         nowIndex.rowPos=row;
         nowIndex.columnPos=column;
-        setTag(row*7+column);
+        setTag(row*CELLNUM+column);
         toIndex = nowIndex;
     }
     
@@ -98,8 +98,8 @@ namespace Game {
         toIndex.rowPos = temp.rowPos;
         toIndex.columnPos = temp.columnPos;
         
-        double width=Director::getInstance()->getWinSize().width/7;
-        double cloumnPos=width*(temp.columnPos%7);
+        double width=Director::getInstance()->getWinSize().width/CELLNUM;
+        double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
         FiniteTimeAction *act2=MoveTo::create(3, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::movingAnimationComplete, this));
@@ -121,8 +121,8 @@ namespace Game {
         toIndex.rowPos = temp.rowPos;
         toIndex.columnPos = temp.columnPos;
         
-        double width=Director::getInstance()->getWinSize().width/7;
-        double cloumnPos=width*(temp.columnPos%7);
+        double width=Director::getInstance()->getWinSize().width/CELLNUM;
+        double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
         FiniteTimeAction *act2=MoveTo::create(3, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::movingAnimationComplete2, this));
@@ -136,8 +136,8 @@ namespace Game {
         _isMoving=true;
         _layer->deleteing(this);
         isAnimation=true;
-        double width=Director::getInstance()->getWinSize().width/7;
-        double cloumnPos=width*(temp.columnPos%7);
+        double width=Director::getInstance()->getWinSize().width/CELLNUM;
+        double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
         if (isCellIndexEqual(nowIndex, getToCellIndex())) {
             FiniteTimeAction *act1=Blink::create(3, 2);
@@ -167,8 +167,8 @@ namespace Game {
         _isDrop=true;
         _layer->droping(this);
         isAnimation=true;
-        double width=Director::getInstance()->getWinSize().width/7;
-        double cloumnPos=width*(temp.columnPos%7);
+        double width=Director::getInstance()->getWinSize().width/CELLNUM;
+        double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
         
         FiniteTimeAction *act2=MoveTo::create(3, Vec2(cloumnPos, rowPos));
@@ -330,7 +330,7 @@ namespace Game {
         _status=cellNormale;
         
         int temp=cellType=0;
-        temp=1+std::rand()%7;
+        temp=1+std::rand()%CELLNUM;
         cellType=temp;
         char pic[30]="";
         std::sprintf(pic, "fruit0%d-HD.png",cellType);
@@ -338,12 +338,21 @@ namespace Game {
         this->addChild(fruntSp);
         return true;
     }
-    
+    //-1没有图,0随机，1-9固定头像，99云朵
     void FruntCell::setType(int type)
     {
         cellType=type;
+        if (type==0) {
+            cellType=1+std::rand()%CELLNUM;
+        }
         char pic[30]="";
-        std::sprintf(pic, "fruit0%d-HD.png",cellType);
+        if (type==99) {
+            std::sprintf(pic, "yun.png");
+        }else
+            if (type==100) {
+                
+            }else
+                std::sprintf(pic, "fruit0%d-HD.png",cellType);
         fruntSp->setTexture(pic);
     }
     /*
@@ -412,15 +421,15 @@ namespace Game {
         double _yDir=p1.y-p2.y;
         Size size = Director::getInstance()->getWinSize();
         float winw = size.width;
-        if (_xDir>10&&fabs(_yDir)<winw/7) {
+        if (_xDir>10&&fabs(_yDir)<winw/CELLNUM) {
             return LEFT;
-        }else if (_yDir>10&&fabs(_xDir)<winw/7)
+        }else if (_yDir>10&&fabs(_xDir)<winw/CELLNUM)
         {
             return DOWN;
-        }else if (_xDir<-10&&fabs(_yDir)<winw/7)
+        }else if (_xDir<-10&&fabs(_yDir)<winw/CELLNUM)
         {
             return RIGHT;
-        }else if (_yDir<-10&&fabs(_xDir)<winw/7)
+        }else if (_yDir<-10&&fabs(_xDir)<winw/CELLNUM)
             return UP;
         return NONE;
     }

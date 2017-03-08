@@ -7,6 +7,7 @@
 //
 #include <regex.h>
 #include "GameACT.h"
+
 namespace Game
 {
     /*
@@ -50,7 +51,7 @@ namespace Game
                     int ff=i;
                     for (int column=0; column<count; column++) {
                         ff--;
-                        Node *node=this->getChildByTag(row*7+ff);
+                        Node *node=this->getChildByTag(row*CELLNUM+ff);
                         FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         if (cell){
                             delmap.insert(pair<int, int>(ff,row));
@@ -86,7 +87,7 @@ namespace Game
                     for (int column=0; column<count; column++) {
                         
                         ff--;
-                        Node *node=this->getChildByTag(row*7+ff);
+                        Node *node=this->getChildByTag(row*CELLNUM+ff);
                         FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         if (cell){
                             if (row1==row && col1==ff) {
@@ -127,7 +128,7 @@ namespace Game
                     int ff=i;
                     for (int row=0; row<count; row++) {
                         ff--;
-                        Node *node=this->getChildByTag(ff*7+column);
+                        Node *node=this->getChildByTag(ff*CELLNUM+column);
                         FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         if (cell) {
                             if (row1==ff && col1==column) {
@@ -168,7 +169,7 @@ namespace Game
                     int ff=i;
                     for (int row=0; row<count; row++) {
                         ff--;
-                        Node *node=this->getChildByTag(ff*7+column);
+                        Node *node=this->getChildByTag(ff*CELLNUM+column);
                         FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         if (cell) {
                             delmap.insert(pair<int, int>(column,ff));
@@ -186,7 +187,7 @@ namespace Game
     
     string GameLayer::getCellTypeString(int row,int column)
     {
-        Node *node=this->getChildByTag(row*7+column);
+        Node *node=this->getChildByTag(row*CELLNUM+column);
         FruntCell *cell=dynamic_cast<FruntCell *>(node);
         char temps[2]="";
         
@@ -206,9 +207,9 @@ namespace Game
         DeleteList rowList;
         DeleteList colList;
         
-        for (int row=0; row<7; row++) {
+        for (int row=0; row<CELLNUM; row++) {
             std::string ss;
-            for (int column=0; column<7; column++) {
+            for (int column=0; column<CELLNUM; column++) {
                 string sg = getCellTypeString(row, column);
                 ss+=sg;
             }
@@ -220,9 +221,9 @@ namespace Game
                 rowList.push_back(*delit);
             }
         }
-        for (int column=0; column<7; column++) {
+        for (int column=0; column<CELLNUM; column++) {
             std::string ss;
-            for (int row=0; row<7; row++) {
+            for (int row=0; row<CELLNUM; row++) {
                 string sg = getCellTypeString(row, column);
                 ss+=sg;
             }
@@ -378,7 +379,7 @@ namespace Game
         if (cellsStatus[index.rowPos][index.columnPos]!=0) {
             return;
         }
-        CCLOG("---> GameLayer : click at index column=%d row=%d tag=%d\r\n",index.columnPos,index.rowPos,index.rowPos*7+index.columnPos);
+        CCLOG("---> GameLayer : click at index column=%d row=%d tag=%d\r\n",index.columnPos,index.rowPos,index.rowPos*CELLNUM+index.columnPos);
         _lastedClick=index;
     }
     
@@ -587,7 +588,7 @@ namespace Game
                     temp.rowPos=mapit->second;
                     temp.columnPos=mapit->first;
                     
-                    Node *node1=this->getChildByTag(temp.rowPos*7+temp.columnPos);
+                    Node *node1=this->getChildByTag(temp.rowPos*CELLNUM+temp.columnPos);
                     if (node1) {
                         FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
                         cell1->joinCellAnimation(DeleteAnimation, temp);
@@ -602,10 +603,10 @@ namespace Game
     bool GameLayer::TODO_ResetCell()
     {
         
-        for (int i=0; i<7; i++) {
-            for (int j=0; j<7; j++) {
+        for (int i=0; i<CELLNUM; i++) {
+            for (int j=0; j<CELLNUM; j++) {
                 
-                Node *node=this->getChildByTag(i*7+j);
+                Node *node=this->getChildByTag(i*CELLNUM+j);
                 FruntCell *cell=dynamic_cast<FruntCell *>(node);
                 
                 
@@ -614,7 +615,7 @@ namespace Game
                     !cell->isCellIndexEqual(cell->getCellIndex(), cell->getToCellIndex()) &&
                     !cell->isAnimation) {
                     
-                    Node *node2=this->getChildByTag(cell->getToCellIndex().rowPos*7+cell->getToCellIndex().columnPos);
+                    Node *node2=this->getChildByTag(cell->getToCellIndex().rowPos*CELLNUM+cell->getToCellIndex().columnPos);
                     FruntCell *cell2=dynamic_cast<FruntCell *>(node2);
                     
                     if (cellsStatus[cell2->getCellIndex().rowPos][cell2->getCellIndex().columnPos]==0) {
@@ -627,23 +628,65 @@ namespace Game
         }
         return true;
     }
-    
+    //垂直方向最上一行有固定消除物的，不可添加新的cell，从固定的点物理偏移过来
+    //垂直方向最上一行有固定不可消除物的，不可添加新的cell,从固定的点无聊偏移过来
     bool GameLayer::TODO_DropCell()
     {
-        for (int column=0; column<7; column++) {
-            for (int row=6; row>=0; row--) {
+        list<list<FruntCell *>> totallist;
+        list<FruntCell *> celllist2;
+        for (int column=0; column<CELLNUM/2; column++) {
+            list<FruntCell *> celllist;
+            
+            int vi = 0;
+            int nearby = CELLNUM+1;
+            list<int> needadd;
+            for (int row=CELLNUM-1; row>=0; row--) {
+                
                 int type = cellsStatus[row][column];
+                
+                if (type==-1|| type==99 || type==100) {
+                    vi = 1;
+                    nearby = row+1;
+                    continue;
+                }
+                if (type!=5) {
+                    Node *node=this->getChildByTag(row*CELLNUM+column);
+                    FruntCell *cell=dynamic_cast<FruntCell *>(node);
+                    if (cell){
+                        cell->dropPreVi = vi;
+                        cellsStatus[row][column]=3;
+                        celllist.push_back(cell);
+                    }
+                }
                 if (type==5) {
-                    
+                    needadd.push_back(nearby);
                 }
             }
+            if (!needadd.empty()) {
+                FruntCell *cell = createNewCell(column, nearby, false, 0, CELLNUM, 3);
+                cell->dropPreVi = vi;
+                if (vi!=0) {
+                    celllist2.push_back(cell);
+                }else
+                    celllist.push_back(cell);
+            }
+            
+            
+            totallist.push_back(celllist);
         }
+        
+        
+        list<list<FruntCell *>>::iterator totallistit = totallist.begin();
+        for (; totallistit!=totallist.end(); totallistit++) {
+            
+        }
+        
         return true;
     }
     
     void GameLayer::showTag()
     {
-        for (int row=0; row<7; row++) {
+        for (int row=0; row<CELLNUM; row++) {
             CCLOG("-------->");
             CCLOG("%d %d %d %d %d %d %d",cellsStatus[row][0],cellsStatus[row][1],cellsStatus[row][2],cellsStatus[row][3],cellsStatus[row][4],cellsStatus[row][5],cellsStatus[row][6]);
             CCLOG("<--------");
@@ -654,8 +697,8 @@ namespace Game
     
     void GameLayer::registTwoCell(CellIndex c1, CellIndex c2)
     {
-        Node *node1=this->getChildByTag(c1.rowPos*7+c1.columnPos);
-        Node *node2=this->getChildByTag(c2.rowPos*7+c2.columnPos);
+        Node *node1=this->getChildByTag(c1.rowPos*CELLNUM+c1.columnPos);
+        Node *node2=this->getChildByTag(c2.rowPos*CELLNUM+c2.columnPos);
         FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
         FruntCell *cell2=dynamic_cast<FruntCell *>(node2);
         if (node1!=NULL&&node2!=NULL &&
@@ -671,10 +714,10 @@ namespace Game
     void GameLayer::addNewCells(int column)
     {
 
-        for (int row=0; row<7; row++) {
+        for (int row=0; row<CELLNUM; row++) {
             int count=0;
             for (int index=row; index<14; index++) {
-                Node *node=this->getChildByTag(index*7+column);
+                Node *node=this->getChildByTag(index*CELLNUM+column);
                 FruntCell *cell=dynamic_cast<FruntCell *>(node);
                 if (cellsStatus[index][column]==5||
                     cellsStatus[index][column]==1||
@@ -726,8 +769,8 @@ namespace Game
     void GameLayer::findCurrent()
     {
         DeleteFNMap delmap;
-        for (int row=0; row<MAXCOUNT; row++) {
-            for (int column=0; column<MAXCOUNT; column++) {
+        for (int row=0; row<CELLNUM; row++) {
+            for (int column=0; column<CELLNUM; column++) {
                 for (int i =1; i<=4; i++) {
                     CellIndex lastedindex;
                     lastedindex.rowPos = row;
@@ -758,9 +801,9 @@ namespace Game
         
         {//按行／列找计算可通过滑动消失的cell
             
-            for (int row=0; row<7; row++) {
+            for (int row=0; row<CELLNUM; row++) {
                 std::string ss;
-                for (int column=0; column<7; column++) {
+                for (int column=0; column<CELLNUM; column++) {
                     string sg = getCellTypeString(row, column);
                     if (trow==row && tcolumn==column) {
                         sg = getCellTypeString(trow2, tcolumn2);
@@ -779,9 +822,9 @@ namespace Game
                     rowList.push_back(*delit);
                 }
             }
-            for (int column=0; column<7; column++) {
+            for (int column=0; column<CELLNUM; column++) {
                 std::string ss;
-                for (int row=0; row<7; row++) {
+                for (int row=0; row<CELLNUM; row++) {
                     string sg = getCellTypeString(row, column);
                     if (trow==row && tcolumn==column) {
                         sg = getCellTypeString(trow2, tcolumn2);
@@ -960,8 +1003,8 @@ namespace Game
             return false;
         }
         
-        for (int i = 0; i < 7; i++) {
-            for (int j = 0; j < 7; j++) {
+        for (int i = 0; i < CELLNUM; i++) {
+            for (int j = 0; j < CELLNUM; j++) {
                 cellsStatus[i][j] = 0;
             }
         }
@@ -1029,25 +1072,27 @@ namespace Game
     {
         
         
-        int temp[7][7] = {
-            {-1, -1, -1, 2, -1, -1, -1},
-            {-1, -1,  5, 6,  7, -1, -1},
-            {-1,  3,  5, 6,  7,  2, -1},
-            {-1,  3,  4, 4,  7,  1, -1},
-            {-1,  1,  3, 3,  5,  1, -1},
-            {-1, -1,  4, 5,  6, -1, -1},
-            {-1, -1, -1, 5, -1, -1, -1}
+        int temp[9][9] = {
+            {99, 99, 99, 99, 1, 99, 99,99,99},
+            {99, 99, 99,  6, 7,  1, 99,99,99},
+            {99, 99,  5,  6, 3,  2,  1,99,99},
+            {99,  3,  4,  4,  7,  2,  2, 1,99},
+            { 1,  1,  3,  3,  5,  1,  3, 4, 1},
+            {99,  1,  4,  5,  6,  1,  2, 1,99},
+            {99, 99,  1,  5,  1,  5,  1,99,99},
+            {99, 99, 99,  1,  2,  1, 99,99,99},
+            {99, 99, 99, 99,  1, 99, 99,99,99}
         };
-        //make 7*7 cells
-        for (int column=0; column<7; column++) {
-            for (int row=6; row>=0; row--) {
+        //make CELLNUM*CELLNUM cells
+        for (int column=0; column<CELLNUM; column++) {
+            for (int row=CELLNUM-1; row>=0; row--) {
                 if (temp[row][column]==-1) {
-                    createNewCell(column, row,false,temp[row][column],7,-1);
+                    createNewCell(column, row,false,temp[row][column],CELLNUM,-1);
                 }else
                 if (temp[row][column]==99) {
-                    createNewCell(column, row,false,temp[row][column],7,99);
+                    createNewCell(column, row,false,temp[row][column],CELLNUM,99);
                 }else
-                    createNewCell(column, row,false,temp[row][column],7,0);
+                    createNewCell(column, row,false,temp[row][column],CELLNUM,0);
             }
         }
     }

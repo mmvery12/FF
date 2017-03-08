@@ -36,6 +36,8 @@ using namespace std;
 
 
 namespace Game {
+    
+    
 	typedef int _MAX_ROW;
     typedef int _ROW;
     typedef int _COLUMN;
@@ -99,8 +101,9 @@ namespace Game {
          4      deleteing
          5      deleted
          99     storn
+         100    k.o.
          */
-        int cellsStatus[7][7];
+        int cellsStatus[CELLNUM][CELLNUM];
         DeleteFNMap prefnmap;
         struct CmpByValue {
             bool operator()(const PAIR& lhs, const PAIR& rhs) {
