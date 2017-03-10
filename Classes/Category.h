@@ -25,15 +25,15 @@ namespace Game
 		void noteDeleteCells(int row,int column,int celltype,int number);
 
 
-		void compute(Deletemultimap dprow,Deletemultimap dpcolumn);
+		void compute(DeleteUnitList dprow,DeleteUnitList dpcolumn);
 		Category(void);
 		~Category(void);
 	private:
-        Deletemultimap _dCMap;
-		Deletemultimap _dRMap;
+        DeleteUnitList _dCMap;
+		DeleteUnitList _dRMap;
 		DeleteReturnMap _rMap;
-		void RowC(Deletemultimap &dprow,Deletemultimap &dpcolumn,DeleteReturnMap rtMap);
-		void ColumnC(Deletemultimap &dpcolumn,Deletemultimap &dprow,DeleteReturnMap rtMap);
+		void RowC(DeleteUnitList &dprow,DeleteUnitList &dpcolumn,DeleteReturnMap rtMap);
+		void ColumnC(DeleteUnitList &dpcolumn,DeleteUnitList &dprow,DeleteReturnMap rtMap);
 	};
 
 

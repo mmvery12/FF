@@ -4,19 +4,25 @@ using namespace std;
 #define CELLNUM 9
 typedef int column;
 typedef int row;
-typedef multimap<column,row> Deletemultimap;
+
+
 typedef map<int,int> PosMap;
 typedef map<int,int> MoveMap;
 typedef map<int,int> CellMap;
 typedef map<PosMap,MoveMap> DeleteReturnMap;
-typedef Deletemultimap::const_iterator DeleteIterator;
 typedef pair<int, int> PAIR;
 
-typedef list<Deletemultimap> DeleteList;
-typedef DeleteList::const_iterator DeleteListIterator;
 
 
-typedef multimap<int,Deletemultimap> DeleteFNMap;
+typedef list<long long> DeleteUnitList;
+typedef DeleteUnitList::const_iterator DeleteUnitListIterator;
+
+
+typedef list<DeleteUnitList> DeleteTotalUnitList;
+typedef DeleteTotalUnitList::const_iterator DeleteTotalUnitListIterator;
+
+
+typedef multimap<long long,DeleteUnitList> DeleteFNMap;
 typedef DeleteFNMap::const_iterator DeleteFNMapIterator;
 
 typedef  DeleteFNMap DropFNMap;

@@ -22,14 +22,17 @@ public:
     virtual void direction(MoveDirection dir,CellIndex lastedClick)=0;
     
     virtual void willAnimate(Layer *cell)=0;
-    virtual void moving(Layer *cell)=0;
+    virtual void exchanging(Layer *cell)=0;
     virtual void droping(Layer *cell)=0;
     virtual void deleteing(Layer *cell)=0;
     
     virtual void deleteComplete(Layer *cell)=0;
     virtual void movingComplete(Layer *cell)=0;
+    virtual void movingComplete2(Layer *cell)=0;
 
     virtual void dropComplete(Layer *cell)=0;
+    
+    virtual void moveAndDeleteComplete(Layer *cell)=0;
     //    virtual void exchangeComplete(Layer *cell);
 };
 #endif /* defined(__FruitEat__ClickDelegate__) */

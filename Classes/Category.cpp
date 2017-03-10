@@ -13,13 +13,14 @@ namespace Game
 
 	void Category::noteDeleteCells(int row,int column,int celltype,int number)
 	{
+        /*
 		if (celltype==0)
 		{
 			for (int i=0;i<number;i++)
 			{
 				if (0!=_dCMap.count(row+i))
 				{
-                    DeleteIterator it;
+                    DeleteUnitListIterator it;
                     for (it=_dCMap.equal_range(column).first; it!=_dCMap.equal_range(column).second; ++it)
                     {
                         int itcolumn=it->first;
@@ -41,7 +42,7 @@ namespace Game
 			{
 				if (0!=_dRMap.count(column+i))
 				{
-					DeleteIterator it;
+					DeleteUnitListIterator it;
                     for (it=_dRMap.equal_range(column+i).first; it!=_dRMap.equal_range(column+i).second; ++it)
                     {
                         int itcolumn=it->first;
@@ -57,17 +58,19 @@ namespace Game
 				
 			}
 		}
+         */
 	}
 
     
     
     
     
-	void Category::compute(Deletemultimap dprow,Deletemultimap dpcolumn)
+	void Category::compute(DeleteUnitList dprow,DeleteUnitList dpcolumn)
 	{
+        /*
 		DeleteReturnMap returnMap;
-		DeleteIterator itrow=dprow.begin();
-		DeleteIterator itecol=dpcolumn.begin();
+		DeleteUnitListIterator itrow=dprow.begin();
+		DeleteUnitListIterator itecol=dpcolumn.begin();
 		if (dprow.empty()!=true
 			&&dpcolumn.empty()!=true)//row&&column
 		{
@@ -80,7 +83,7 @@ namespace Game
 				MoveMap move;
 				move.insert(pair<int,int>(0,0));
 				returnMap.insert(pair<PosMap,MoveMap>(pos,move));
-				DeleteIterator it;
+				DeleteUnitListIterator it;
 				for (it=dpcolumn.equal_range(column).first; it!=dpcolumn.equal_range(column).second; ++it)
 				{	
 					int row2=it->second;
@@ -104,9 +107,11 @@ namespace Game
 					ColumnC(dpcolumn,dprow,returnMap);
 				}
 		}
+         */
 	}
-	void Category::RowC(Deletemultimap &dprow,Deletemultimap &dpcolumn,DeleteReturnMap returnMap)
+	void Category::RowC(DeleteUnitList &dprow,DeleteUnitList &dpcolumn,DeleteReturnMap returnMap)
 	{
+        /*
 		for (int i=0;i<CELLNUM;i++)
 		{
 			int colcount=dprow.count(i);
@@ -115,7 +120,7 @@ namespace Game
 				continue;
 			}else
 			{
-				DeleteIterator it=dprow.find(i);
+				DeleteUnitListIterator it=dprow.find(i);
 				int index=0;
 				for (it;it!=dprow.end();it++)
 				{
@@ -125,9 +130,7 @@ namespace Game
 					int rowCount=dpcolumn.count(i);//查看此列对应的行是否有删除的cell
 					if (rowCount!=0)
 					{
-						/*for (DeleteIterator it=dpcolumn.find(i);it!=)
-						{
-						}*/
+						
 					}
 
 
@@ -161,9 +164,11 @@ namespace Game
 
 
 		}
+         */
 	}
-	void Category::ColumnC(Deletemultimap &dpcolumn,Deletemultimap &dprow,DeleteReturnMap returnMap)
+	void Category::ColumnC(DeleteUnitList &dpcolumn,DeleteUnitList &dprow,DeleteReturnMap returnMap)
 	{
+        /*
 		for (int i=0;i<CELLNUM;i++)
 		{
 			int count=dpcolumn.count(i);
@@ -172,7 +177,7 @@ namespace Game
 				continue;
 			}else
 			{
-				DeleteIterator it=dpcolumn.find(i);
+				DeleteUnitListIterator it=dpcolumn.find(i);
 				int index=0;
 				for (it;it!=dpcolumn.end();it++)
 				{
@@ -202,7 +207,9 @@ namespace Game
 				}
 			}
 		}
+         */
 	}
+         
 }
 	
 

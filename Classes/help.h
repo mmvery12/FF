@@ -35,7 +35,9 @@ enum AnimationType {
     OnlyMoveAnimation=0,
     OnlyMoveAnimation2=1,
     DeleteAnimation,
-    DropAnimation
+    DropAnimation,
+    MoveAndDeleteAnimate,
+    LightAnimate
 };
 
 

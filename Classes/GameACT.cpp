@@ -10,6 +10,64 @@
 
 namespace Game
 {
+    void int2str(const long long  &int_temp,string &string_temp)
+    {
+        stringstream stream;
+        stream<<int_temp;
+        string_temp=stream.str();
+    }
+    
+    void str2int(long long  &int_temp,const string &string_temp)
+    {
+        stringstream stream(string_temp);
+        stream>>int_temp;
+    }
+    
+    long long GameLayer::colRowToInt(int col,int row)
+    {
+        long long temp = (long long)col*100000 + (long long)row*1000;
+        
+        return temp;
+    }
+    CellIndex GameLayer::intToColRow(long long colrowint)
+    {
+        CellIndex index;
+        long long col = colrowint/100000;
+        long long row = (colrowint-(col*100000))/1000;
+        index.rowPos = (int)row;
+        index.columnPos = (int)col;
+        return index;
+    }
+    
+    long long GameLayer::colRowToInt2(int col,int row)
+    {
+        long long temp = ((long long)col*100000 + (long long)row*1000)*1000000;
+        
+        return temp;
+    }
+    //未移动前的可消除cell的目标index
+    CellIndex GameLayer::preCanDeleteTargetCellIndex(long long colrowint)
+    {
+        
+        colrowint/=1000000;
+        CellIndex index;
+        long long col = colrowint/100000;
+        long long row = (colrowint-(col*100000))/1000;
+        index.rowPos = (int)row;
+        index.columnPos = (int)col;
+        return index;
+    }
+    //未移动前的可消除cell的当前index
+    CellIndex GameLayer::preCanDeleteCurrentCellIndex(long long colrowint)
+    {
+        colrowint%=1000000;
+        CellIndex index;
+        long long col = colrowint/100000;
+        long long row = (colrowint-(col*100000))/1000;
+        index.rowPos = (int)row;
+        index.columnPos = (int)col;
+        return index;
+    }
     /*
      int status ,i;
      int cflags = REG_EXTENDED;
@@ -31,9 +89,10 @@ namespace Game
      regfree(&reg);
      */
     
-    DeleteList GameLayer::findRowDelete(string ss,int row)
+    DeleteTotalUnitList GameLayer::findRowDelete(string ss,int row)
     {
-        DeleteList dellist;
+        DeleteTotalUnitList totalunitlist;
+        
         char temp=NULL;
         int count=0;
         for (int i=0;i<ss.size();i++)
@@ -46,7 +105,7 @@ namespace Game
                 temp=ss[i];
                 if (count>=2)
                 {
-                    Deletemultimap delmap;
+                    DeleteUnitList unitlist;
                     count++;
                     int ff=i;
                     for (int column=0; column<count; column++) {
@@ -54,21 +113,21 @@ namespace Game
                         Node *node=this->getChildByTag(row*CELLNUM+ff);
                         FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         if (cell){
-                            delmap.insert(pair<int, int>(ff,row));
+                            unitlist.push_back(colRowToInt(ff, row));
                             log("---> GameLayer : destory cell [%d][%d] findRowDelete",row,ff);
                         }
                     }
-                    dellist.push_back(delmap);
+                    totalunitlist.push_back(unitlist);
                 }
                 count=0;
             }
         }
-        return dellist;
+        return totalunitlist;
     }
     
-    DeleteList GameLayer::findRowDelete2(string ss,int row,int row1,int col1,int row2,int col2)
+    DeleteTotalUnitList GameLayer::findRowDelete2(string ss,int row,int row1,int col1,int row2,int col2)
     {
-        DeleteList dellist;
+        DeleteTotalUnitList dellist;
         char temp=NULL;
         int count=0;
         for (int i=0;i<ss.size();i++)
@@ -81,7 +140,7 @@ namespace Game
                 temp=ss[i];
                 if (count>=2)
                 {
-                    Deletemultimap delmap;
+                    DeleteUnitList delmap;
                     count++;
                     int ff=i;
                     for (int column=0; column<count; column++) {
@@ -91,12 +150,15 @@ namespace Game
                         FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         if (cell){
                             if (row1==row && col1==ff) {
-                                delmap.insert(pair<int, int>(col2, row2));
+                                delmap.push_back(colRowToInt(col2, row2));
+                                //delmap.insert(pair<int, int>(col2, row2));
                             }else
                             if (row2==row&& col2==ff) {
-                                delmap.insert(pair<int, int>(col1,row1));
+                                delmap.push_back(colRowToInt(col1, row1));
+                                //delmap.insert(pair<int, int>(col1,row1));
                             }else
-                                delmap.insert(pair<int, int>(ff,row));
+                                delmap.push_back(colRowToInt(ff, row));
+                                //delmap.insert(pair<int, int>(ff,row));
                             log("---> GameLayer : destory cell [%d][%d] findRowDelete",row,ff);
                         }
                     }
@@ -108,9 +170,9 @@ namespace Game
         return dellist;
     }
     
-    DeleteList GameLayer::findColDelete2(string ss,int column,int row1,int col1,int row2,int col2)
+    DeleteTotalUnitList GameLayer::findColDelete2(string ss,int column,int row1,int col1,int row2,int col2)
     {
-        DeleteList dellist;
+        DeleteTotalUnitList dellist;
         char temp=NULL;
         int count=0;
         for (int i=0;i<ss.size();i++)
@@ -123,7 +185,7 @@ namespace Game
                 temp=ss[i];
                 if (count>=2)
                 {
-                    Deletemultimap delmap;
+                    DeleteUnitList delmap;
                     count++;
                     int ff=i;
                     for (int row=0; row<count; row++) {
@@ -132,12 +194,15 @@ namespace Game
                         FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         if (cell) {
                             if (row1==ff && col1==column) {
-                                delmap.insert(pair<int, int>(col2, row2));
+                                delmap.push_back(colRowToInt(col2, row2));
+                                //delmap.insert(pair<int, int>(col2, row2));
                             }else
                                 if (row2==ff&& col2==column) {
-                                    delmap.insert(pair<int, int>(col1,row1));
+                                    delmap.push_back(colRowToInt(col1, row1));
+                                    //delmap.insert(pair<int, int>(col1,row1));
                                 }else
-                                    delmap.insert(pair<int, int>(column,ff));
+                                    delmap.push_back(colRowToInt(column, ff));
+                                    //delmap.insert(pair<int, int>(column,ff));
                         }
                     }
                     dellist.push_back(delmap);
@@ -149,9 +214,9 @@ namespace Game
         return dellist;
     }
     
-    DeleteList GameLayer::findColDelete(string ss,int column)
+    DeleteTotalUnitList GameLayer::findColDelete(string ss,int column)
     {
-        DeleteList dellist;
+        DeleteTotalUnitList dellist;
         char temp=NULL;
         int count=0;
         for (int i=0;i<ss.size();i++)
@@ -164,7 +229,7 @@ namespace Game
                 temp=ss[i];
                 if (count>=2)
                 {
-                    Deletemultimap delmap;
+                    DeleteUnitList delmap;
                     count++;
                     int ff=i;
                     for (int row=0; row<count; row++) {
@@ -172,7 +237,8 @@ namespace Game
                         Node *node=this->getChildByTag(ff*CELLNUM+column);
                         FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         if (cell) {
-                            delmap.insert(pair<int, int>(column,ff));
+                            delmap.push_back(colRowToInt(column, ff));
+                            //delmap.insert(pair<int, int>(column,ff));
                             log("---> GameLayer : destory cell [%d][%d] findColDelete",ff,column);
                         }
                     }
@@ -204,8 +270,8 @@ namespace Game
     DeleteFNMap GameLayer::TODO_FindDeleteCells()
     {
         DeleteFNMap fnmap;
-        DeleteList rowList;
-        DeleteList colList;
+        DeleteTotalUnitList rowtotalunitList;
+        DeleteTotalUnitList coltotalunitList;
         
         for (int row=0; row<CELLNUM; row++) {
             std::string ss;
@@ -214,11 +280,11 @@ namespace Game
                 ss+=sg;
             }
             ss+='_';
-            DeleteList temp1 = findRowDelete(ss, row);
-            DeleteListIterator delit=temp1.begin();
+            DeleteTotalUnitList temp1 = findRowDelete(ss, row);
+            DeleteTotalUnitListIterator delit=temp1.begin();
             for (;delit!=temp1.end();delit++)
             {
-                rowList.push_back(*delit);
+                rowtotalunitList.push_back(*delit);
             }
         }
         for (int column=0; column<CELLNUM; column++) {
@@ -228,108 +294,126 @@ namespace Game
                 ss+=sg;
             }
             ss+='_';
-            DeleteList temp2 = findColDelete(ss, column);
-            DeleteListIterator delit=temp2.begin();
+            DeleteTotalUnitList temp2 = findColDelete(ss, column);
+            DeleteTotalUnitListIterator delit=temp2.begin();
             for (;delit!=temp2.end();delit++)
             {
-                colList.push_back(*delit);
+                coltotalunitList.push_back(*delit);
             }
         }
         
-        
-        
-        
-        
-        DeleteListIterator rowdelit=rowList.begin();
-        DeleteListIterator coldelit=colList.begin();
-        if (!rowList.empty() || !colList.empty()) {
+        DeleteTotalUnitListIterator rowtotalunitdelit=rowtotalunitList.begin();
+        DeleteTotalUnitListIterator coltotalunitdelit=coltotalunitList.begin();
+        if (!rowtotalunitList.empty() || !coltotalunitList.empty()) {
             
         }
         
-        if (rowList.empty() || colList.empty()) {
-            for (;rowdelit!=rowList.end();rowdelit++)
+        if (rowtotalunitList.empty() || coltotalunitList.empty()) {
+            for (;rowtotalunitdelit!=rowtotalunitList.end();rowtotalunitdelit++)
             {
-                Deletemultimap rowmap = * rowdelit;
-                fnmap.insert(pair<int, Deletemultimap>(rowmap.size(),rowmap));
+                DeleteUnitList rowmap = * rowtotalunitdelit;
+                DeleteUnitListIterator it = rowmap.begin();
+                it++;
+                if (rowmap.size()==3) {
+                    fnmap.insert(pair<int, DeleteUnitList>(rowmap.size()+*it,rowmap));
+                }
+                if (rowmap.size()==4) {
+                    fnmap.insert(pair<int, DeleteUnitList>(rowmap.size()+*it,rowmap));
+                }
+                
             }
-            for (;coldelit!=colList.end();coldelit++)
+            for (;coltotalunitdelit!=coltotalunitList.end();coltotalunitdelit++)
             {
-                Deletemultimap colmap = * coldelit;
-                fnmap.insert(pair<int, Deletemultimap>(colmap.size(),colmap));
+                DeleteUnitList colmap = * coltotalunitdelit;
+                DeleteUnitListIterator it = colmap.begin();
+                it++;
+                if (colmap.size()==3) {
+                    fnmap.insert(pair<int, DeleteUnitList>(colmap.size()+*it,colmap));
+                }
+                if (colmap.size()==4) {
+                    fnmap.insert(pair<int, DeleteUnitList>(colmap.size()+*it,colmap));
+                }
+                
             }
         }else
         {
-
-            DeleteList tempCompairRow;
-            DeleteList tempCompairCol;
             
-            for (;rowdelit!=rowList.end();rowdelit++)
+            DeleteTotalUnitList tempCompairRow;
+            DeleteTotalUnitList tempCompairCol;
+            rowtotalunitdelit = rowtotalunitList.begin();
+            for (;rowtotalunitdelit!=rowtotalunitList.end();rowtotalunitdelit++)
             {
-                Deletemultimap rowmap = * rowdelit;
-                DeleteIterator rowmapit = rowmap.begin();
-                
-                Deletemultimap tolmap;
-                Deletemultimap tempColmap;
-                for (; rowmapit!=rowmap.end(); rowmapit++) {
-                    for (;coldelit!=colList.end();coldelit++){
-                        Deletemultimap colmap = * coldelit;
-                        DeleteIterator colmapit = colmap.begin();
-                        if (colmap.count(rowmapit->first)!=0) {
-                            for (; colmapit!=colmap.end(); colmapit++) {
-                                if (rowmapit->first==colmapit->first && rowmapit->second==colmapit->second) {
-                                    tempColmap = colmap;
-                                    tempCompairRow.push_front(rowmap);
-                                    tempCompairCol.push_front(colmap);
-                                    break;
-                                }
-                            }
-                            if (!tempColmap.empty()) {
-                                break;
-                            }
-                        }else
-                        {
-                            break;
+                DeleteUnitList rowunit = * rowtotalunitdelit;
+                DeleteUnitList samemergeunit;
+                int saverowcolint;
+                DeleteUnitList colunit;
+                coltotalunitdelit = coltotalunitList.begin();
+                for (;coltotalunitdelit!=coltotalunitList.end() && !rowunit.empty();coltotalunitdelit++){
+                    colunit = * coltotalunitdelit;
+                    
+                    DeleteUnitList rowunit2 = rowunit;
+                    DeleteUnitList colunit2 = colunit;
+                    
+                    DeleteUnitList temp;
+                    temp.merge(rowunit2);
+                    temp.merge(colunit2);
+                    temp.sort();
+                    DeleteUnitList samemergeunit2 = temp;
+                    temp.unique();
+                    if (temp.size()!=rowunit2.size()+colunit2.size()) {//有重复元素
+                        samemergeunit = temp;
+                        //下面通过map计数找出重复的cell的int表述
+                        map<int,int> kkk;
+                        DeleteUnitListIterator samemergeunit2it = samemergeunit2.begin();
+                        for (; samemergeunit2it!=samemergeunit2.end(); samemergeunit2it++) {
+                            int value = kkk[*samemergeunit2it];
+                            kkk[*samemergeunit2it] = ++value;
                         }
-                        
-                    }
-                    if (!tempColmap.empty()) {
+                        map<int, int>::iterator kkkit = kkk.begin();
+                        int tempvalue = 0;
+                        int tempkey = 0;
+                        for (; kkkit!=kkk.end(); kkkit++) {
+                            int value = kkkit->second;
+                            if (value>=tempvalue) {
+                                tempvalue = value;
+                                tempkey = kkkit->first;
+                            }
+                        }
+                        saverowcolint = tempkey;
                         break;
                     }
                 }
                 
-                if (!tempColmap.empty()) {
-                    rowmapit = rowmap.begin();
-                    DeleteIterator colmapit = tempColmap.begin();
-                    for (; rowmapit!=rowmap.end(); rowmapit++) {
-                        tolmap.insert(pair<int, int>(rowmapit->first,rowmapit->second));
-                    }
-                    for (; colmapit!=tempColmap.end(); colmapit++) {
-                        tolmap.insert(pair<int, int>(colmapit->first,colmapit->second));
-                    }
-                    fnmap.insert(pair<int, Deletemultimap>(tolmap.size(),tolmap));
+                if (!samemergeunit.empty() && !rowunit.empty()) {
+                    DeleteUnitList samemergeunittemp = samemergeunit;
+                    DeleteUnitList rowunittemp = rowunit;
+                    DeleteUnitList colunittemp = colunit;
+
+                    fnmap.insert(pair<int, DeleteUnitList>(samemergeunittemp.size()+saverowcolint,samemergeunittemp));
+                    coltotalunitList.remove(colunittemp);
+                    rowtotalunitList.erase(rowtotalunitdelit++);
+                }
+                samemergeunit.clear();
+                
+            }
+            {//单独循环出单行
+                rowtotalunitdelit = rowtotalunitList.begin();
+                for (;rowtotalunitdelit!=rowtotalunitList.end();rowtotalunitdelit++){
+                    DeleteUnitList tempmap = * rowtotalunitdelit;
+                    DeleteUnitListIterator it = tempmap.begin();
+                    it++;
+                    fnmap.insert(pair<int, DeleteUnitList>(tempmap.size()+*it,tempmap));
+                }
+                coltotalunitdelit = coltotalunitList.begin();
+                for (;coltotalunitdelit!=coltotalunitList.end();coltotalunitdelit++){
+                    DeleteUnitList tempmap = * coltotalunitdelit;
+                    DeleteUnitListIterator it = tempmap.begin();
+                    it++;
+                    fnmap.insert(pair<int, DeleteUnitList>(tempmap.size()+*it,tempmap));
                 }
             }
-            rowdelit=tempCompairRow.begin();
-            for (; rowdelit != tempCompairRow.end() && !rowList.empty(); rowdelit++) {
-                rowList.remove(*rowdelit);
-            }
             
-            coldelit=tempCompairCol.begin();
-            for (; coldelit != tempCompairCol.end() && !colList.empty(); coldelit++) {
-                colList.remove(*coldelit);
-            }
             
-            rowdelit=rowList.begin();
-            for (; rowdelit!=rowList.end(); rowdelit++) {
-                Deletemultimap tempmap = * rowdelit;
-                fnmap.insert(pair<int, Deletemultimap>(tempmap.size(),tempmap));
-            }
-            
-            coldelit=colList.begin();
-            for (; coldelit!=colList.end(); coldelit++) {
-                Deletemultimap tempmap = * coldelit;
-                fnmap.insert(pair<int, Deletemultimap>(tempmap.size(),tempmap));
-            }
         }
         
         return fnmap;
@@ -402,7 +486,7 @@ namespace Game
         }
         if (dir==UP) {
             _tempIndex.rowPos+=1;
-            flag=_tempIndex.rowPos>6?false:true;
+            flag=_tempIndex.rowPos>(CELLNUM-1)?false:true;
             //若_lasted正下方存在则移动
         }
         if (dir==LEFT) {
@@ -412,7 +496,7 @@ namespace Game
         }
         if (dir==RIGHT) {
             _tempIndex.columnPos+=1;
-            flag=_tempIndex.columnPos>6?false:true;
+            flag=_tempIndex.columnPos>(CELLNUM-1)?false:true;
             //若_lasted正右方存在则移动
         }
         if (flag) {
@@ -470,7 +554,7 @@ namespace Game
         cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=1;
     }
     
-    void GameLayer::moving(Layer *cell)
+    void GameLayer::exchanging(Layer *cell)
     {
         _isMoving.push_back(1);
         FruntCell *temp=dynamic_cast<FruntCell *>(cell);
@@ -484,7 +568,7 @@ namespace Game
     }
     void GameLayer::droping(Layer *cell)
     {
-        _isDrop.push_back(1);
+        _isDropping.push_back(1);
         FruntCell *temp=dynamic_cast<FruntCell *>(cell);
         cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=3;
     }
@@ -497,8 +581,20 @@ namespace Game
         cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=0;
 //		pthread_mutex_unlock(&mutex);
         _isMoving.pop_back();
+        temp->joinCellAnimation(OnlyMoveAnimation2, temp->getToCellIndex());
     }
     
+    
+    
+    void GameLayer::movingComplete2(Layer *cell)
+    {
+        //		pthread_mutex_lock(&mutex);
+        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
+        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=0;
+        //		pthread_mutex_unlock(&mutex);
+        _isMoving.pop_back();
+    }
+
     void GameLayer::deleteComplete(Layer *cell)
     {
 //        pthread_mutex_lock(&mutex);
@@ -518,7 +614,15 @@ namespace Game
         FruntCell *temp=dynamic_cast<FruntCell *>(cell);
 		cellsStatus[temp->getToCellIndex().rowPos][temp->getToCellIndex().columnPos]=0;
 //		pthread_mutex_unlock(&mutex);
-        _isDrop.pop_back();
+        _isDropping.pop_back();
+    }
+    
+    void GameLayer::moveAndDeleteComplete(Layer *cell)
+    {
+        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
+        cellsStatus[temp->getToCellIndex().rowPos][temp->getToCellIndex().columnPos]=5;
+        //		pthread_mutex_unlock(&mutex);
+        _isDropping.pop_back();
     }
     
 #pragma mark click delegate end
@@ -530,10 +634,10 @@ namespace Game
         
         ;
     
-        TODO_DropCell();
-        TODO_DeleteCell();
-        TODO_ResetCell();
-        if (_isMoving.empty() && _isDrop.empty() && _isDeleteing.empty()) {
+        //TODO_DropCell();
+        //TODO_DeleteCell();
+        //TODO_ResetCell();
+        if (_isMoving.empty() && _isDropping.empty() && _isDeleteing.empty()) {
             findCurrent();
         }
 
@@ -541,31 +645,6 @@ namespace Game
         
     }
 
-    
-    Deletemultimap GameLayer::sortMapByRow(pair<DeleteIterator,DeleteIterator> Findpair,int column)
-    {
-        DeleteIterator dit=Findpair.first;
-        Deletemultimap temp;
-        //<------------------------ sort & erase same --------------------------
-        for (; dit!=Findpair.second;dit++) {
-            temp.insert(pair<int, int>(dit->first,dit->second));
-        }
-        vector<PAIR> name_score_vec(temp.begin(), temp.end());
-        sort(name_score_vec.begin(), name_score_vec.end(), CmpByValue());
-        vector<PAIR>::iterator vecIt=name_score_vec.begin();
-        
-        temp.erase(column);
-        PAIR same;
-        for (; vecIt!=name_score_vec.end(); vecIt++) {
-            if (same==*vecIt) {
-                continue;
-            }
-            same=*vecIt;
-            temp.insert(*vecIt);
-        }
-        return temp;
-        //------------------------ sort & erase same -------------------------->
-    }
     
     
     bool GameLayer::TODO_DeleteCell()
@@ -579,21 +658,37 @@ namespace Game
             for (;delit!=delmap.end();delit++)
             {
                 //爆炸效果跟随元素或是在固定位置
-                int type = delit->first;
+                long long  type = delit->first;
+                CellIndex index = intToColRow(type);
+                long long  count = type - colRowToInt(index.columnPos, index.rowPos);
                 
-                Deletemultimap map = delit->second;
-                DeleteIterator mapit = map.begin();
+                DeleteUnitList map = delit->second;
+                DeleteUnitListIterator mapit = map.begin();
                 for (; mapit!=map.end(); mapit++) {
-                    CellIndex temp;
-                    temp.rowPos=mapit->second;
-                    temp.columnPos=mapit->first;
-                    
+                    CellIndex temp = intToColRow(*mapit);
                     Node *node1=this->getChildByTag(temp.rowPos*CELLNUM+temp.columnPos);
-                    if (node1) {
-                        FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
-                        cell1->joinCellAnimation(DeleteAnimation, temp);
-                        cell1->setCellStatus(cellDestory);
+                    if (temp.rowPos==index.rowPos && temp.columnPos==index.columnPos && count>3) {
+                        if (node1) {
+                            FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                            if (count==4) {
+                                
+                            }
+                            if (count>=5) {
+                                
+                            }
+                            cellsStatus[temp.rowPos][temp.columnPos]=0;
+                        }
+                    }else
+                    {
+                        if (node1) {
+                            FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                            cell1->joinCellAnimation(DeleteAnimation, temp);
+                            cell1->setCellStatus(cellDestory);
+                        }
                     }
+                    
+                    
+                    
                 }
             }
         }
@@ -609,11 +704,10 @@ namespace Game
                 Node *node=this->getChildByTag(i*CELLNUM+j);
                 FruntCell *cell=dynamic_cast<FruntCell *>(node);
                 
-                
                 if (cell &&
                     cellsStatus[cell->getCellIndex().rowPos][cell->getCellIndex().columnPos]==0 &&
                     !cell->isCellIndexEqual(cell->getCellIndex(), cell->getToCellIndex()) &&
-                    !cell->isAnimation) {
+                    !cell->isAnimation()) {
                     
                     Node *node2=this->getChildByTag(cell->getToCellIndex().rowPos*CELLNUM+cell->getToCellIndex().columnPos);
                     FruntCell *cell2=dynamic_cast<FruntCell *>(node2);
@@ -632,53 +726,14 @@ namespace Game
     //垂直方向最上一行有固定不可消除物的，不可添加新的cell,从固定的点无聊偏移过来
     bool GameLayer::TODO_DropCell()
     {
-        list<list<FruntCell *>> totallist;
-        list<FruntCell *> celllist2;
-        for (int column=0; column<CELLNUM/2; column++) {
-            list<FruntCell *> celllist;
-            
-            int vi = 0;
-            int nearby = CELLNUM+1;
-            list<int> needadd;
+        for (int column=0; column<CELLNUM; column++) {
+            dropCount[column].clear();
             for (int row=CELLNUM-1; row>=0; row--) {
-                
                 int type = cellsStatus[row][column];
-                
-                if (type==-1|| type==99 || type==100) {
-                    vi = 1;
-                    nearby = row+1;
-                    continue;
-                }
-                if (type!=5) {
-                    Node *node=this->getChildByTag(row*CELLNUM+column);
-                    FruntCell *cell=dynamic_cast<FruntCell *>(node);
-                    if (cell){
-                        cell->dropPreVi = vi;
-                        cellsStatus[row][column]=3;
-                        celllist.push_back(cell);
-                    }
-                }
                 if (type==5) {
-                    needadd.push_back(nearby);
+                    dropCount[column].push_back(column);
                 }
             }
-            if (!needadd.empty()) {
-                FruntCell *cell = createNewCell(column, nearby, false, 0, CELLNUM, 3);
-                cell->dropPreVi = vi;
-                if (vi!=0) {
-                    celllist2.push_back(cell);
-                }else
-                    celllist.push_back(cell);
-            }
-            
-            
-            totallist.push_back(celllist);
-        }
-        
-        
-        list<list<FruntCell *>>::iterator totallistit = totallist.begin();
-        for (; totallistit!=totallist.end(); totallistit++) {
-            
         }
         
         return true;
@@ -702,9 +757,32 @@ namespace Game
         FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
         FruntCell *cell2=dynamic_cast<FruntCell *>(node2);
         if (node1!=NULL&&node2!=NULL &&
-            !cell1->isAnimation && !cell2->isAnimation) {
-            cell1->joinCellAnimation(OnlyMoveAnimation, c2);
-            cell2->joinCellAnimation(OnlyMoveAnimation, c1);
+            !cell1->isAnimation() && !cell2->isAnimation()) {
+    
+            //移动的cell在可消除cell序列中，则安步执行所有不可点击、消除、新增cell、下落cell、所有可点击步骤
+            //移动的cell不在可消除cell序列中，先让所有cell不可颠，动画完成后让所有cell可点
+            DeleteFNMapIterator it = prefnmap.begin();
+            bool have = false;
+            for (; it!=prefnmap.end(); it++) {
+                
+                CellIndex index1 = preCanDeleteCurrentCellIndex(it->first);
+                CellIndex index2 = preCanDeleteTargetCellIndex(it->first);
+                if ((cell1->isCellIndexEqual(c1, index1) && cell2->isCellIndexEqual(c2, index2)) ||
+                    (cell1->isCellIndexEqual(c1, index2) && cell2->isCellIndexEqual(c2, index1))) {
+                    have = true;
+                    prefnmap.erase(it);
+                    break;
+                }
+            }
+            if (have) {
+                cell1->joinCellAnimation(OnlyMoveAnimation2, c2);
+                cell2->joinCellAnimation(OnlyMoveAnimation2, c1);
+            }else
+            {
+                cell1->joinCellAnimation(OnlyMoveAnimation, c2);
+                cell2->joinCellAnimation(OnlyMoveAnimation, c1);
+            }
+            
         }
     }
 
@@ -769,26 +847,62 @@ namespace Game
     void GameLayer::findCurrent()
     {
         DeleteFNMap delmap;
-        for (int row=0; row<CELLNUM; row++) {
-            for (int column=0; column<CELLNUM; column++) {
-                for (int i =1; i<=4; i++) {
-                    CellIndex lastedindex;
-                    lastedindex.rowPos = row;
-                    lastedindex.columnPos = column;
-                    CellIndex index = compute2((MoveDirection)i,lastedindex);
-                    if (index.rowPos!=-1 && index.columnPos!=-1) {
-                        DeleteFNMap temp = TODO_FindDeleteCells2(row, column, index.rowPos, index.columnPos);
-                        DeleteFNMapIterator delit=temp.begin();
-                        for (;delit!=temp.end();delit++)
-                        {
-                            delmap.insert(pair<int, Deletemultimap>(delit->first,delit->second));
+        
+        DeleteFNMap beDelMap = TODO_FindDeleteCells();
+        if (beDelMap.empty()) {
+            for (int row=0; row<CELLNUM; row++) {
+                for (int column=0; column<CELLNUM; column++) {
+                    for (int i =1; i<=4; i++) {
+                        CellIndex lastedindex;
+                        lastedindex.rowPos = row;
+                        lastedindex.columnPos = column;
+                        CellIndex index = compute2((MoveDirection)i,lastedindex);
+                        if (index.rowPos!=-1 && index.columnPos!=-1) {
+                            DeleteFNMap temp = TODO_FindDeleteCells2(row, column, index.rowPos, index.columnPos);
+                            DeleteFNMapIterator delit=temp.begin();
+                            for (;delit!=temp.end();delit++)
+                            {//5004003
+                                long long celldropint = delit->first+colRowToInt(lastedindex.columnPos, lastedindex.rowPos)+colRowToInt2(index.columnPos, index.rowPos);
+                                delmap.insert(pair<long long, DeleteUnitList>(celldropint,delit->second));
+                            }
                         }
                     }
                 }
             }
-        }
-        if (!delmap.empty()) {
-            prefnmap = delmap;
+            if (!delmap.empty()) {
+                prefnmap.clear();
+                prefnmap = delmap;
+            }
+        }else
+        {
+            DeleteFNMapIterator it = beDelMap.begin();
+            for (; it!=beDelMap.end(); it++) {
+                CellIndex index = intToColRow(it->first);
+                int count = (int)(it->first - colRowToInt(index.columnPos, index.rowPos));
+                DeleteUnitList list = it->second;
+                DeleteUnitListIterator listit = list.begin();
+                for (; listit!=list.end(); listit++) {
+                    CellIndex temp = intToColRow(*listit);
+                    Node *node1=this->getChildByTag(temp.rowPos*CELLNUM+temp.columnPos);
+                    FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                    if (cell1) {
+                        if (count==3) {
+                            cell1->joinCellAnimation(DeleteAnimation, cell1->getToCellIndex());
+                        }
+                        if (cell1->isCellIndexEqual(index, temp)) {
+                            cell1->joinCellAnimation(LightAnimate, index);
+                        }else
+                        {
+                            if (count==4) {
+                                cell1->joinCellAnimation(MoveAndDeleteAnimate, index);
+                            }
+                            if (count>=5) {
+                                cell1->joinCellAnimation(MoveAndDeleteAnimate, index);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -796,8 +910,8 @@ namespace Game
     DeleteFNMap GameLayer::TODO_FindDeleteCells2(int trow,int tcolumn,int trow2,int tcolumn2)
     {
         DeleteFNMap fnmap;
-        DeleteList rowList;
-        DeleteList colList;
+        DeleteTotalUnitList rowtotalunitList;
+        DeleteTotalUnitList coltotalunitList;
         
         {//按行／列找计算可通过滑动消失的cell
             
@@ -814,12 +928,12 @@ namespace Game
                     ss+=sg;
                 }
                 ss+='_';
-                DeleteList temp = findRowDelete2(ss, row,trow,tcolumn,trow2,tcolumn2);
-                DeleteListIterator delit=temp.begin();
+                DeleteTotalUnitList temp = findRowDelete2(ss, row,trow,tcolumn,trow2,tcolumn2);
+                DeleteTotalUnitListIterator delit=temp.begin();
                 
                 for (;delit!=temp.end();delit++)
                 {
-                    rowList.push_back(*delit);
+                    rowtotalunitList.push_back(*delit);
                 }
             }
             for (int column=0; column<CELLNUM; column++) {
@@ -835,110 +949,124 @@ namespace Game
                     ss+=sg;
                 }
                 ss+='_';
-                DeleteList temp = findColDelete2(ss, column,trow,tcolumn,trow2,tcolumn2);
-                DeleteListIterator delit=temp.begin();
+                DeleteTotalUnitList temp = findColDelete2(ss, column,trow,tcolumn,trow2,tcolumn2);
+                DeleteTotalUnitListIterator delit=temp.begin();
                 for (;delit!=temp.end();delit++)
                 {
-                    rowList.push_back(*delit);
+                    coltotalunitList.push_back(*delit);
                 }
             }
         }
         
         
-        {
-            DeleteListIterator rowdelit=rowList.begin();
-            DeleteListIterator coldelit=colList.begin();
-            if (!rowList.empty() || !colList.empty()) {
+        DeleteTotalUnitListIterator rowtotalunitdelit=rowtotalunitList.begin();
+        DeleteTotalUnitListIterator coltotalunitdelit=coltotalunitList.begin();
+        if (!rowtotalunitList.empty() || !coltotalunitList.empty()) {
+            
+        }
+        
+        if (rowtotalunitList.empty() || coltotalunitList.empty()) {
+            for (;rowtotalunitdelit!=rowtotalunitList.end();rowtotalunitdelit++)
+            {
+                DeleteUnitList rowmap = * rowtotalunitdelit;
+                DeleteUnitListIterator it = rowmap.begin();
+                it++;
+                if (rowmap.size()==3) {
+                    fnmap.insert(pair<long long, DeleteUnitList>(rowmap.size(),rowmap));
+                }
+                if (rowmap.size()==4) {
+                    fnmap.insert(pair<long long, DeleteUnitList>(rowmap.size(),rowmap));
+                }
                 
+            }
+            for (;coltotalunitdelit!=coltotalunitList.end();coltotalunitdelit++)
+            {
+                DeleteUnitList colmap = * coltotalunitdelit;
+                if (colmap.size()==3) {
+                    fnmap.insert(pair<long long, DeleteUnitList>(colmap.size(),colmap));
+                }
+                if (colmap.size()==4) {
+                    fnmap.insert(pair<long long, DeleteUnitList>(colmap.size(),colmap));
+                }
+                
+            }
+        }else
+        {
+            
+            DeleteTotalUnitList tempCompairRow;
+            DeleteTotalUnitList tempCompairCol;
+            rowtotalunitdelit = rowtotalunitList.begin();
+            for (;rowtotalunitdelit!=rowtotalunitList.end();rowtotalunitdelit++)
+            {
+                DeleteUnitList rowunit = * rowtotalunitdelit;
+                DeleteUnitList samemergeunit;
+                int saverowcolint;
+                DeleteUnitList colunit;
+                coltotalunitdelit = coltotalunitList.begin();
+                for (;coltotalunitdelit!=coltotalunitList.end() && !rowunit.empty();coltotalunitdelit++){
+                    colunit = * coltotalunitdelit;
+                    
+                    DeleteUnitList rowunit2 = rowunit;
+                    DeleteUnitList colunit2 = colunit;
+                    
+                    DeleteUnitList temp;
+                    temp.merge(rowunit2);
+                    temp.merge(colunit2);
+                    temp.sort();
+                    DeleteUnitList samemergeunit2 = temp;
+                    temp.unique();
+                    if (temp.size()!=rowunit2.size()+colunit2.size()) {//有重复元素
+                        samemergeunit = temp;
+                        //下面通过map计数找出重复的cell的int表述
+                        map<int,int> kkk;
+                        DeleteUnitListIterator samemergeunit2it = samemergeunit2.begin();
+                        for (; samemergeunit2it!=samemergeunit2.end(); samemergeunit2it++) {
+                            long long value = kkk[*samemergeunit2it];
+                            kkk[*samemergeunit2it] = ++value;
+                        }
+                        map<int, int>::iterator kkkit = kkk.begin();
+                        int tempvalue = 0;
+                        int tempkey = 0;
+                        for (; kkkit!=kkk.end(); kkkit++) {
+                            int value = kkkit->second;
+                            if (value>=tempvalue) {
+                                tempvalue = value;
+                                tempkey = kkkit->first;
+                            }
+                        }
+                        saverowcolint = tempkey;
+                        break;
+                    }
+                }
+                
+                if (!samemergeunit.empty() && !rowunit.empty()) {
+                    DeleteUnitList samemergeunittemp = samemergeunit;
+                    DeleteUnitList rowunittemp = rowunit;
+                    DeleteUnitList colunittemp = colunit;
+                    
+                    fnmap.insert(pair<int, DeleteUnitList>(samemergeunittemp.size(),samemergeunittemp));
+                    coltotalunitList.remove(colunittemp);
+                    rowtotalunitList.erase(rowtotalunitdelit++);
+                }
+                samemergeunit.clear();
+                
+            }
+            {//单独循环出单行
+                rowtotalunitdelit = rowtotalunitList.begin();
+                for (;rowtotalunitdelit!=rowtotalunitList.end();rowtotalunitdelit++){
+                    DeleteUnitList tempmap = * rowtotalunitdelit;
+                    fnmap.insert(pair<int, DeleteUnitList>(tempmap.size(),tempmap));
+                }
+                coltotalunitdelit = coltotalunitList.begin();
+                for (;coltotalunitdelit!=coltotalunitList.end();coltotalunitdelit++){
+                    DeleteUnitList tempmap = * coltotalunitdelit;
+                    fnmap.insert(pair<int, DeleteUnitList>(tempmap.size(),tempmap));
+                }
             }
             
-            if (rowList.empty() || colList.empty()) {
-                for (;rowdelit!=rowList.end();rowdelit++)
-                {
-                    Deletemultimap rowmap = * rowdelit;
-                    fnmap.insert(pair<int, Deletemultimap>(rowmap.size(),rowmap));
-                }
-                for (;coldelit!=colList.end();coldelit++)
-                {
-                    Deletemultimap colmap = * coldelit;
-                    fnmap.insert(pair<int, Deletemultimap>(colmap.size(),colmap));
-                }
-            }else
-            {
-                
-                DeleteList tempCompairRow;
-                DeleteList tempCompairCol;
-                
-                for (;rowdelit!=rowList.end();rowdelit++)
-                {
-                    Deletemultimap rowmap = * rowdelit;
-                    DeleteIterator rowmapit = rowmap.begin();
-                    
-                    Deletemultimap tolmap;
-                    Deletemultimap tempColmap;
-                    for (; rowmapit!=rowmap.end(); rowmapit++) {
-                        for (;coldelit!=colList.end();coldelit++){
-                            Deletemultimap colmap = * coldelit;
-                            DeleteIterator colmapit = colmap.begin();
-                            if (colmap.count(rowmapit->first)!=0) {
-                                for (; colmapit!=colmap.end(); colmapit++) {
-                                    if (rowmapit->first==colmapit->first && rowmapit->second==colmapit->second) {
-                                        tempColmap = colmap;
-                                        tempCompairRow.push_front(rowmap);
-                                        tempCompairCol.push_front(colmap);
-                                        break;
-                                    }
-                                }
-                                if (!tempColmap.empty()) {
-                                    break;
-                                }
-                            }else
-                            {
-                                break;
-                            }
-                            
-                        }
-                        if (!tempColmap.empty()) {
-                            break;
-                        }
-                    }
-                    
-                    if (!tempColmap.empty()) {
-                        rowmapit = rowmap.begin();
-                        DeleteIterator colmapit = tempColmap.begin();
-                        for (; rowmapit!=rowmap.end(); rowmapit++) {
-                            tolmap.insert(pair<int, int>(rowmapit->first,rowmapit->second));
-                        }
-                        for (; colmapit!=tempColmap.end(); colmapit++) {
-                            tolmap.insert(pair<int, int>(colmapit->first,colmapit->second));
-                        }
-                        fnmap.insert(pair<int, Deletemultimap>(tolmap.size(),tolmap));
-                    }
-                }
-                rowdelit=tempCompairRow.begin();
-                for (; rowdelit != tempCompairRow.end() && !rowList.empty(); rowdelit++) {
-                    rowList.remove(*rowdelit);
-                }
-                
-                coldelit=tempCompairCol.begin();
-                for (; coldelit != tempCompairCol.end() && !colList.empty(); coldelit++) {
-                    colList.remove(*coldelit);
-                }
-                
-                rowdelit=rowList.begin();
-                for (; rowdelit!=rowList.end(); rowdelit++) {
-                    Deletemultimap tempmap = * rowdelit;
-                    fnmap.insert(pair<int, Deletemultimap>(tempmap.size(),tempmap));
-                }
-                
-                coldelit=colList.begin();
-                for (; coldelit!=colList.end(); coldelit++) {
-                    Deletemultimap tempmap = * coldelit;
-                    fnmap.insert(pair<int, Deletemultimap>(tempmap.size(),tempmap));
-                }
-            }
-
+            
         }
+         
         return fnmap;
     }
     
@@ -1003,6 +1131,8 @@ namespace Game
             return false;
         }
         
+        
+        
         for (int i = 0; i < CELLNUM; i++) {
             for (int j = 0; j < CELLNUM; j++) {
                 cellsStatus[i][j] = 0;
@@ -1049,7 +1179,10 @@ namespace Game
             dtf=100.0;
         }
         
-        
+        for (int i=0; i<CELLNUM; i++) {
+            list<int> temp;
+            dropCount[i] = temp;
+        }
         loadGameMap();
         return true;
     }
@@ -1071,7 +1204,7 @@ namespace Game
     void GameLayer::loadGameMap()
     {
         
-        
+        middlerDropCenter = CELLNUM/2+1;
         int temp[9][9] = {
             {99, 99, 99, 99, 1, 99, 99,99,99},
             {99, 99, 99,  6, 7,  1, 99,99,99},

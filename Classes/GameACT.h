@@ -59,6 +59,7 @@ namespace Game {
     typedef Dropdeque::iterator DequeIterator;
     
     
+    
 #define MAXCOUNT 9
     
     static bool isCellIndexEqual(CellIndex cell1,CellIndex cell2)
@@ -67,9 +68,11 @@ namespace Game {
         return false;
     }
     
+    
+    
     static void *thr_fun(void *arge);
     
-    void recuse(DeleteIterator it,DropMap *map,pair<DeleteIterator, DeleteIterator> Findpair,int topIndex);
+    void recuse(DeleteUnitListIterator it,DropMap *map,pair<DeleteUnitListIterator, DeleteUnitListIterator> Findpair,int topIndex);
     
     class GameLayer : public Layer,ClickDelegate{
         
@@ -79,16 +82,27 @@ namespace Game {
     public:
         
     private:
+        
+        
+        int middlerDropCenter;
+        
 		Category *cy;
 		FruntCell *_tempCell1;
 		FruntCell *_tempCell2;
         
+        long long colRowToInt(int col,int row);
+        CellIndex intToColRow(long long colrowint);
+        long long colRowToInt2(int col,int row);
+        CellIndex preCanDeleteTargetCellIndex(long long colrowint);
+        CellIndex preCanDeleteCurrentCellIndex(long long colrowint);
         
         CellIndex compute(MoveDirection dir,CellIndex lastedClick);
         CellIndex _lastedClick;
         
         CellIndex compute2(MoveDirection dir,CellIndex lastedClick);
         CellIndex _lastedClick2;
+        
+        list<int> dropCount[CELLNUM];
         
         
         void loadGameMap();
@@ -115,7 +129,7 @@ namespace Game {
         bool TODO_DeleteCell();
         bool TODO_ResetCell();
         bool TODO_DropCell();
-        Deletemultimap sortMapByRow(pair<DeleteIterator,DeleteIterator> Findpair,int column);
+        DeleteUnitList sortMapByRow(pair<DeleteUnitListIterator,DeleteUnitListIterator> Findpair,int column);
         void addNewCell(int addcount,int column);
         
         void timeCallBack();
@@ -132,16 +146,16 @@ namespace Game {
         void pop(Ref *node);
         
         
-        list<int> _isDrop;
+        list<int> _isDropping;
         list<int> _isDeleteing;
         list<int> _isMoving;
         
         void findCurrent();
         DeleteFNMap TODO_FindDeleteCells2(int row,int column,int row2,int column2);
-        DeleteList findRowDelete(string ss,int row);
-        DeleteList findColDelete(string ss,int column);
-        DeleteList findRowDelete2(string ss,int row,int row1,int col1,int row2,int col2);
-        DeleteList findColDelete2(string ss,int column,int row1,int col1,int row2,int col2);
+        DeleteTotalUnitList findRowDelete(string ss,int row);
+        DeleteTotalUnitList findColDelete(string ss,int column);
+        DeleteTotalUnitList findRowDelete2(string ss,int row,int row1,int col1,int row2,int col2);
+        DeleteTotalUnitList findColDelete2(string ss,int column,int row1,int col1,int row2,int col2);
         string getCellTypeString(int row,int column);
     public:
         
@@ -162,13 +176,16 @@ namespace Game {
         virtual void direction(MoveDirection dir,CellIndex lastedClick);
         
         virtual void willAnimate(Layer *cell);
-        virtual void moving(Layer *cell);
+        virtual void exchanging(Layer *cell);
         virtual void deleteing(Layer *cell);
         virtual void droping(Layer *cell);
         
         virtual void deleteComplete(Layer *cell);
         virtual void movingComplete(Layer *cell);
+        virtual void movingComplete2(Layer *cell);
         virtual void dropComplete(Layer *cell);
+        virtual void moveAndDeleteComplete(Layer *cell);
+        
     };
 }
     

@@ -32,6 +32,10 @@ namespace Game {
         typedef AnimationList::iterator AnimationIterator;
     private:
         
+        bool _isDropping;
+        bool _isDeleteing;
+        bool _isMoving;
+        
         Sprite *fruntSp;
         CellIndex _index;
         CellIndex _movingIndex;
@@ -61,11 +65,12 @@ namespace Game {
         void movingAnimation2(CellIndex temp);
         void deleteAnimation(CellIndex temp);
         void dropAnimation(CellIndex temp);
+        void moveAndDeleteAnimate(CellIndex temp);
         void movingAnimationComplete();
         void movingAnimationComplete2();
         void deleteAnimationComplete();
         void dropAnimationComplelte();
-        
+        void moveAndDeleteAnimateComplete();
         void exchangeIndex();
         
         
@@ -85,7 +90,7 @@ namespace Game {
         
 //        virtual void update(float delta);
         
-        bool isAnimation;
+        bool isAnimation();
         //old
         inline FruntCell(){};
         inline virtual ~FruntCell(){};
@@ -93,9 +98,6 @@ namespace Game {
         
         CellStatus getCellStatus();
         
-        bool _isDrop;
-        bool _isDeleteing;
-        bool _isMoving;
         bool _canTouch;
         void registDelegate(ClickDelegate *layer);
         void setCellStatus(CellStatus status);
