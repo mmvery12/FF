@@ -24,7 +24,7 @@ namespace Game {
     
     void FruntCell::joinCellAnimation(AnimationType type, CellIndex moveTo)
     {
-        
+        exchangeIndex();
         animationIterator=animationList.begin();
         if (animationIterator!=animationList.end())
         {
@@ -80,6 +80,7 @@ namespace Game {
                     moveAndDeleteAnimate(temp.toIndex);
                     break;
                 case LightAnimate:
+                    lightAnimatimate(temp.toIndex);
                     break;
                 default:
                     break;
@@ -89,10 +90,11 @@ namespace Game {
     
     void FruntCell::movingAnimation(CellIndex temp)
     {
-        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
-            animationList.pop_front();
-            return;
-        }
+//        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
+//            animationList.pop_front();
+//            return;
+//        }
+        
         _canTouch=false;
         _isMoving=true;
         _layer->exchanging((Layer *)this);
@@ -112,10 +114,10 @@ namespace Game {
     
     void FruntCell::movingAnimation2(CellIndex temp)
     {
-        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
-            animationList.pop_front();
-            return;
-        }
+//        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
+//            animationList.pop_front();
+//            return;
+//        }
         _canTouch=false;
         _isMoving=true;
         _layer->exchanging((Layer *)this);
@@ -141,31 +143,20 @@ namespace Game {
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
-        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
-            FiniteTimeAction *act1=Blink::create(3, 2);
-            ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::deleteAnimationComplete, this));
-            //create(this, callfunc_selector(FruntCell::deleteAnimationComplete));
-            Sequence *actList=Sequence::create(act1,act3,NULL);
-            stopAllActions();
-            runAction(actList);
-        }else
-        {
-            FiniteTimeAction *act1=Blink::create(3, 2);
-            FiniteTimeAction *act2=MoveTo::create(3, Vec2(cloumnPos, rowPos));
-            ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::deleteAnimationComplete, this));
-            //create(this, callfunc_selector(FruntCell::deleteAnimationComplete));
-            Sequence *actList=Sequence::create(act1,act2,act3,NULL);
-            stopAllActions();
-            runAction(actList);
-        }
+        FiniteTimeAction *act2=MoveTo::create(3, Vec2(cloumnPos, rowPos));
+        ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::deleteAnimationComplete, this));
+        Sequence *actList=Sequence::create(act2,act3,NULL);
+        stopAllActions();
+        runAction(actList);
     }
     
     void FruntCell::dropAnimation(CellIndex temp)
     {
-        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
-            animationList.pop_front();
-            return;
-        }
+//        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
+//            animationList.pop_front();
+//            return;
+//        }
+        exchangeIndex();
         _canTouch=false;
         _isMoving=true;
         _isDropping=true;
@@ -184,10 +175,10 @@ namespace Game {
     
     void FruntCell::moveAndDeleteAnimate(CellIndex temp)
     {
-        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
-            animationList.pop_front();
-            return;
-        }
+//        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
+//            animationList.pop_front();
+//            return;
+//        }
         _canTouch=false;
         _isMoving=true;
         _isDropping=true;
@@ -203,12 +194,36 @@ namespace Game {
         runAction(actList);
     }
     
+    
+    void FruntCell::lightAnimatimate(CellIndex temp)
+    {
+//        if (isCellIndexEqual(nowIndex, getToCellIndex())) {
+//            animationList.pop_front();
+//            return;
+//        }
+        _canTouch=false;
+        _isMoving=true;
+        _isDropping=true;
+        _layer->lighting(this);
+        double width=Director::getInstance()->getWinSize().width/CELLNUM;
+        double cloumnPos=width*(temp.columnPos%CELLNUM);
+        double rowPos=width*temp.rowPos;
+        
+        FiniteTimeAction *act2=MoveTo::create(3, Vec2(cloumnPos, rowPos));
+        ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::lightAnimatimateComplete, this));
+        Sequence *actList=Sequence::create(act2,act3,NULL);
+        stopAllActions();
+        runAction(actList);
+    }
+    
     void FruntCell::moveAndDeleteAnimateComplete()
     {
         _canTouch=true;
         _isMoving=false;
-        animationList.pop_front();
-        exchangeIndex();
+        if (animationList.size()!=0) {
+            animationList.pop_front();
+        }
+        
         _layer->moveAndDeleteComplete((Layer *)this);
         showAnimation();
     }
@@ -217,8 +232,10 @@ namespace Game {
     {
         _canTouch=true;
         _isMoving=false;
-        animationList.pop_front();
-        exchangeIndex();
+        if (animationList.size()!=0) {
+            animationList.pop_front();
+        }
+//        exchangeIndex();
         _layer->movingComplete((Layer *)this);
         showAnimation();
     }
@@ -227,7 +244,9 @@ namespace Game {
     {
         _canTouch=true;
         _isMoving=false;
-        animationList.pop_front();
+        if (animationList.size()!=0) {
+            animationList.pop_front();
+        }
         setNowIndex(toIndex.rowPos, toIndex.columnPos);
         _layer->movingComplete2((Layer *)this);
         showAnimation();
@@ -237,7 +256,9 @@ namespace Game {
     void FruntCell::deleteAnimationComplete()
     {
         _isMoving=false;
-        animationList.pop_front();
+        if (animationList.size()!=0) {
+            animationList.pop_front();
+        }
         _layer->deleteComplete((Layer *)this);
         showAnimation();
     }
@@ -247,9 +268,9 @@ namespace Game {
         _canTouch=true;
         _isMoving=false;
         _isDropping=false;
-        animationList.pop_front();
-        exchangeIndex();
-        showAnimation();
+        if (animationList.size()!=0) {
+            animationList.pop_front();
+        }
         _layer->dropComplete((Layer *)this);
         if (animationList.size()==0) {
             CCLOG("error_animationList.size()==0");
@@ -257,6 +278,21 @@ namespace Game {
         showAnimation();
     }
     
+    void FruntCell::lightAnimatimateComplete()
+    {
+        _canTouch=true;
+        _isMoving=false;
+        _isDropping=false;
+        if (animationList.size()!=0) {
+            animationList.pop_front();
+        }
+        _layer->lightComplete((Layer *)this);
+        if (animationList.size()==0) {
+            CCLOG("error_animationList.size()==0");
+        }
+        showAnimation();
+    }
+
     void FruntCell::exchangeIndex()
     {
         CellIndex temp=nowIndex;
@@ -390,7 +426,7 @@ namespace Game {
             std::sprintf(pic, "yun.png");
         }else
             if (type==100) {
-                
+                std::sprintf(pic, "100.png");
             }else
                 std::sprintf(pic, "fruit0%d-HD.png",cellType);
         fruntSp->setTexture(pic);

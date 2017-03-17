@@ -30,6 +30,13 @@ struct CellIndex
     int rowPos;
 };
 
+struct CellSquare
+{
+    int columnPos1;//zuo
+    int columnPos2;//you
+    int columnPos3;//xialuocell
+};
+
 enum AnimationType {
     
     OnlyMoveAnimation=0,

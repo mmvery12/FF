@@ -66,11 +66,13 @@ namespace Game {
         void deleteAnimation(CellIndex temp);
         void dropAnimation(CellIndex temp);
         void moveAndDeleteAnimate(CellIndex temp);
+        void lightAnimatimate(CellIndex temp);
         void movingAnimationComplete();
         void movingAnimationComplete2();
         void deleteAnimationComplete();
         void dropAnimationComplelte();
         void moveAndDeleteAnimateComplete();
+        void lightAnimatimateComplete();
         void exchangeIndex();
         
         

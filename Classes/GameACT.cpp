@@ -22,7 +22,7 @@ namespace Game
         stringstream stream(string_temp);
         stream>>int_temp;
     }
-    
+    //当前index
     long long GameLayer::colRowToInt(int col,int row)
     {
         long long temp = (long long)col*100000 + (long long)row*1000;
@@ -38,13 +38,31 @@ namespace Game
         index.columnPos = (int)col;
         return index;
     }
-    
+    //目标index
     long long GameLayer::colRowToInt2(int col,int row)
     {
         long long temp = ((long long)col*100000 + (long long)row*1000)*1000000;
         
         return temp;
     }
+    //col1 左边界，col2右边界，col3掉落口
+    long long GameLayer::squareandbehand(int col1,int col2,int col3)
+    {
+        long long temp = (long long)col1 + (long long)col2*100 + (long long)col3*10000;
+        return temp;
+    }
+    
+    CellSquare GameLayer::benhandsquare(long long square)
+    {
+        CellSquare tsquare;
+        tsquare.columnPos3 = (int)square/10000;
+        tsquare.columnPos2 = (int)(square-(tsquare.columnPos3*10000))/100;
+        tsquare.columnPos1 = (int)(square-(tsquare.columnPos3*10000+tsquare.columnPos2*100));
+        
+        
+        return tsquare;
+    }
+    
     //未移动前的可消除cell的目标index
     CellIndex GameLayer::preCanDeleteTargetCellIndex(long long colrowint)
     {
@@ -320,7 +338,10 @@ namespace Game
                 if (rowmap.size()==4) {
                     fnmap.insert(pair<int, DeleteUnitList>(rowmap.size()+*it,rowmap));
                 }
-                
+                if (rowmap.size()>4) {
+                    it++;
+                    fnmap.insert(pair<int, DeleteUnitList>(rowmap.size()+*it,rowmap));
+                }
             }
             for (;coltotalunitdelit!=coltotalunitList.end();coltotalunitdelit++)
             {
@@ -333,7 +354,10 @@ namespace Game
                 if (colmap.size()==4) {
                     fnmap.insert(pair<int, DeleteUnitList>(colmap.size()+*it,colmap));
                 }
-                
+                if (colmap.size()>4) {
+                    it++;
+                    fnmap.insert(pair<int, DeleteUnitList>(colmap.size()+*it,colmap));
+                }
             }
         }else
         {
@@ -549,8 +573,6 @@ namespace Game
         if (temp->getCellIndex().rowPos==5 && temp->getCellIndex().columnPos==4 ) {
             
         }
-
-        
         cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=1;
     }
     
@@ -580,8 +602,12 @@ namespace Game
         FruntCell *temp=dynamic_cast<FruntCell *>(cell);
         cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=0;
 //		pthread_mutex_unlock(&mutex);
-        _isMoving.pop_back();
+        
         temp->joinCellAnimation(OnlyMoveAnimation2, temp->getToCellIndex());
+        
+        if (!_isMoving.empty()) {
+            _isMoving.pop_back();
+        }
     }
     
     
@@ -592,7 +618,9 @@ namespace Game
         FruntCell *temp=dynamic_cast<FruntCell *>(cell);
         cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=0;
         //		pthread_mutex_unlock(&mutex);
-        _isMoving.pop_back();
+        if (!_isMoving.empty()) {
+            _isMoving.pop_back();
+        }
     }
 
     void GameLayer::deleteComplete(Layer *cell)
@@ -603,9 +631,260 @@ namespace Game
         cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=5;
         this->removeChild(cell);
         
-        _isDeleteing.pop_back();
-//        pthread_mutex_unlock(&mutex);
         
+//        pthread_mutex_unlock(&mutex);
+        if (!_isDeleteing.empty()) {
+            _isDeleteing.pop_back();
+        }
+        if (_lastDeleteCell == temp) {//所有cell删除之后执行下落//先下落，再根据＝5的状态判断左右下落
+            _lastDeleteCell = NULL;
+            //            IIIIII(cellsStatus);
+            
+            for (int i=0; i<CELLNUM; i++) {
+                for (int j=0; j<CELLNUM; j++) {
+                    tempcellsStatus[i][j] = cellsStatus[i][j];
+                }
+            }
+            
+            IIIIII();
+        }
+    }
+    
+    void GameLayer::lighting(Layer *cell)
+    {
+        _islighting.push_back(1);
+        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
+        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=2;
+    }
+    void GameLayer::lightComplete(Layer *cell)
+    {
+        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
+        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=0;
+        
+        if (!_islighting.empty()) {
+            _islighting.pop_back();
+        }
+        if (_lastDeleteCell == temp) {//所有cell删除之后执行下落//先下落，再根据＝5的状态判断左右下落
+            _lastDeleteCell = NULL;
+            
+            for (int i=0; i<CELLNUM; i++) {
+                for (int j=0; j<CELLNUM; j++) {
+                    tempcellsStatus[i][j] = cellsStatus[i][j];
+                }
+            }
+            IIIIII();
+        }
+    }
+    
+    void GameLayer::moveAndDeleteing(Layer *cell)
+    {
+        _isMoveAndDeleteing.push_back(1);
+        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
+        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=2;
+    }
+    void GameLayer::moveAndDeleteComplete(Layer *cell)
+    {
+        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
+        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=5;
+        this->removeChild(cell);
+    
+        if (!_isMoveAndDeleteing.empty()) {
+            _isMoveAndDeleteing.pop_back();
+        }
+        if (_lastDeleteCell == temp) {
+            _lastDeleteCell = NULL;
+            
+            for (int i=0; i<CELLNUM; i++) {
+                for (int j=0; j<CELLNUM; j++) {
+                    tempcellsStatus[i][j] = cellsStatus[i][j];
+                }
+            }
+            
+            IIIIII();
+        }
+    }
+    
+//    void GameLayer::IIIIII(int tempcellsStatus2xxx[][CELLNUM])
+    void GameLayer::IIIIII()
+    {
+//        int tempcellsStatus[CELLNUM][CELLNUM];
+//        for(int i=0;i<m;i++)
+//            for(int j=0;j<n;j++)
+//                tempcellsStatus[i][j] = p[i*m+j];
+//        
+//        
+        
+        for (int col=0; col<CELLNUM; col++) {//先下落现有的，在下落新增的，在左右下落
+            list<int> tempdrop = dropCount[col];
+            if (tempdrop.empty()) {
+                continue;
+            }
+    
+            //应该从下向上统计，遇到＝5list中的cell需下落个数count ＋1，遇到＝－1、100、99，count重置
+            map<long long ,int> temodropmap;
+            int ddcount = 0;
+            for (int row = 0; row<CELLNUM; row++) {
+                Node *node1=this->getChildByTag(row*CELLNUM+col);
+                FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                if (cell1 && ddcount>0 && (tempcellsStatus[row][col]!=-1 && tempcellsStatus[row][col]!=99 && tempcellsStatus[row][col]!=100 && tempcellsStatus[row][col]!=5)) {//正常cell,切可下落个数不为空
+                    temodropmap.insert(pair<long long, int>(colRowToInt(col, row),ddcount));
+                }
+                if (tempcellsStatus[row][col]==5) {//遇到可下落点，可下落书＋＋
+                    ddcount++;
+                }
+                if (tempcellsStatus[row][col]==-1 || tempcellsStatus[row][col]==99 || tempcellsStatus[row][col]==100) {//当遇到阻碍物时，重置加入flag
+                    ddcount=0;
+                }
+            }
+            {
+                map<long long ,int>::iterator temodropmapit = temodropmap.begin();
+                for (; temodropmapit!=temodropmap.end(); temodropmapit++) {
+                    CellIndex index = intToColRow(temodropmapit->first);
+                    int tempcount = temodropmapit->second;
+                    Node *node1=this->getChildByTag(index.rowPos*CELLNUM+index.columnPos);
+                    FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                    if (cell1 && tempcount>0) {
+                        
+                        tempcellsStatus[index.rowPos][index.columnPos] = 5;
+                        index.rowPos-=tempcount;
+                        cell1->joinCellAnimation(DropAnimation, index);
+                        tempcellsStatus[index.rowPos][index.columnPos] = 0;
+                    }
+                }
+            }
+        }
+        
+        //尝试可左右移动到＝5的cell
+        //尝试从cell的可掉落口?统计出某个区间右那几个下落口负责，具体格式//(区间开头,区间结尾)(下落口)//，下落口可能相同，可能不同
+        list<long long>qujianlist;
+        int lastindexcol = 0;
+        for (int col=0; col<CELLNUM; col++) {
+            if (tempcellsStatus[CELLNUM-1][col]!=99&&
+                tempcellsStatus[CELLNUM-1][col]!=100&&
+                tempcellsStatus[CELLNUM-1][col]!=-1) {//找出掉落口
+                
+                
+                bool isleft = false;
+                if (((
+                      tempcellsStatus[CELLNUM-1][col-1]==99||
+                      tempcellsStatus[CELLNUM-1][col-1]==100||
+                      tempcellsStatus[CELLNUM-1][col-1]==-1
+                      )||
+                     col==0
+                     )) {//最左侧掉落口,或普通左侧掉落口,可能左右合一
+                    isleft = true;
+                }
+                bool isright = false;
+                if (((
+                      tempcellsStatus[CELLNUM-1][col+1]==99||
+                      tempcellsStatus[CELLNUM-1][col+1]==100||
+                      tempcellsStatus[CELLNUM-1][col+1]==-1
+                      )||
+                     col==CELLNUM-1
+                     )) {//最右侧掉落口,或普通右侧掉落口,可能左右合一
+                    isright = true;
+                }
+                if (isleft) {
+                    qujianlist.push_front(squareandbehand(col, lastindexcol, col));
+                }
+                if (isright) {
+                    for (int temp = col+1; temp<CELLNUM; temp++) {
+                        if ((tempcellsStatus[CELLNUM-1][temp]!=99&&
+                            tempcellsStatus[CELLNUM-1][temp]!=100&&
+                            tempcellsStatus[CELLNUM-1][temp]!=-1)
+                            ) {//找出掉落口
+                            qujianlist.push_front(squareandbehand(col, temp-1, col));
+                        }
+                        if (temp==CELLNUM-1) {
+                            qujianlist.push_front(squareandbehand(col, temp, col));
+                        }
+                    }
+                }
+                if (!isleft && !isright) {
+                    qujianlist.push_front(squareandbehand(col, col, col));
+                }
+                lastindexcol = col;
+            }
+        }
+        bool hascehua = false;
+        for (int col=0; col<CELLNUM; col++) {//侧滑
+            for (int row = CELLNUM-1; row>=0; row--) {
+                if (row==3 && col ==2) {
+                    
+                }
+                if (tempcellsStatus[row][col]==5 && (tempcellsStatus[row+1][col]==99 || tempcellsStatus[row+1][col]==100 || tempcellsStatus[row+1][col]==-1) && tempcellsStatus[row-1][col]!=5) {
+                    list<long long>::iterator qujianlistit = qujianlist.begin();
+                    for (; qujianlistit!=qujianlist.end(); qujianlistit++) {
+                        CellSquare square = benhandsquare(*qujianlistit);
+                        if ((col>=square.columnPos1 && col<=square.columnPos2)||
+                            (col>=square.columnPos2 && col<=square.columnPos1)) {
+                            if (square.columnPos3>=col) {
+                                if (col+1!=CELLNUM-1 && row+1!=CELLNUM-1 ) {
+                                    Node *node1=this->getChildByTag((row+1)*CELLNUM+col+1);
+                                    FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                                    if (cell1 && tempcellsStatus[row+1][col+1]==0) {
+                                        tempcellsStatus[row+1][col+1]=5;
+                                        CellIndex index;
+                                        index.rowPos = row;
+                                        index.columnPos = col;
+                                        cell1->joinCellAnimation(DropAnimation, index);
+                                        tempcellsStatus[index.rowPos][index.columnPos]=0;
+                                
+                                        hascehua = true;
+                                    }
+                                    
+                                }
+                            }else
+                            if (square.columnPos3<=col) {
+                                if (col-1!=0 && row+1!=CELLNUM-1 && (tempcellsStatus[row+1][col-1]==0)) {
+                                    Node *node1=this->getChildByTag((row+1)*CELLNUM+col-1);
+                                    FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                                    
+                                    if (cell1 && tempcellsStatus[row+1][col+1]==0) {
+                                        tempcellsStatus[row+1][col-1]=5;
+                                        CellIndex index;
+                                        index.rowPos = row;
+                                        index.columnPos = col;
+                                        cell1->joinCellAnimation(DropAnimation, index);
+                                        tempcellsStatus[index.rowPos][index.columnPos]=0;
+                                        
+                                        hascehua = true;
+                                    }
+                                    
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int j=0; j<CELLNUM; j++) {
+            dropCount[j].clear();
+            for (int i = 0; i<CELLNUM; i++) {
+                if (tempcellsStatus[i][j]==5) {
+                    dropCount[j].push_back(i);
+                }
+            }
+        }
+        return;
+        if (hascehua) {
+            IIIIII();
+        }else
+        {
+            list<long long>::iterator qujianlistit = qujianlist.begin();
+            for (; qujianlistit!=qujianlist.end(); qujianlistit++) {
+                CellSquare square = benhandsquare(*qujianlistit);
+                if (square.columnPos1>=square.columnPos2) {
+                    for (int col = square.columnPos1; col>=square.columnPos2; col--) {
+                        
+                    }
+                }else
+                    for (int col = square.columnPos1; col<=square.columnPos2; col++) {
+                        
+                    }
+            }
+        }
+        //＝5cellstatus的index上方有遮挡物的时候可以用老的cell左右下落，不然只能靠新增cell下落的左右下落
     }
     
     void GameLayer::dropComplete(Layer *cell)
@@ -614,16 +893,12 @@ namespace Game
         FruntCell *temp=dynamic_cast<FruntCell *>(cell);
 		cellsStatus[temp->getToCellIndex().rowPos][temp->getToCellIndex().columnPos]=0;
 //		pthread_mutex_unlock(&mutex);
-        _isDropping.pop_back();
+        
+        if (!_isDropping.empty()) {
+            _isDropping.pop_back();
+        }
     }
     
-    void GameLayer::moveAndDeleteComplete(Layer *cell)
-    {
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getToCellIndex().rowPos][temp->getToCellIndex().columnPos]=5;
-        //		pthread_mutex_unlock(&mutex);
-        _isDropping.pop_back();
-    }
     
 #pragma mark click delegate end
     
@@ -686,9 +961,6 @@ namespace Game
                             cell1->setCellStatus(cellDestory);
                         }
                     }
-                    
-                    
-                    
                 }
             }
         }
@@ -846,10 +1118,13 @@ namespace Game
     
     void GameLayer::findCurrent()
     {
-        DeleteFNMap delmap;
         
+        if (_lastDeleteCell!=NULL && _lastDropCell!=NULL) {
+            return;
+        }
         DeleteFNMap beDelMap = TODO_FindDeleteCells();
         if (beDelMap.empty()) {
+            DeleteFNMap delmap;
             for (int row=0; row<CELLNUM; row++) {
                 for (int column=0; column<CELLNUM; column++) {
                     for (int i =1; i<=4; i++) {
@@ -861,7 +1136,7 @@ namespace Game
                             DeleteFNMap temp = TODO_FindDeleteCells2(row, column, index.rowPos, index.columnPos);
                             DeleteFNMapIterator delit=temp.begin();
                             for (;delit!=temp.end();delit++)
-                            {//5004003
+                            {//e.g. 5004003
                                 long long celldropint = delit->first+colRowToInt(lastedindex.columnPos, lastedindex.rowPos)+colRowToInt2(index.columnPos, index.rowPos);
                                 delmap.insert(pair<long long, DeleteUnitList>(celldropint,delit->second));
                             }
@@ -875,7 +1150,24 @@ namespace Game
             }
         }else
         {
+            //有下落过程时，所有cell禁止touch
+            for (int col = 0; col<CELLNUM; col++) {
+                blocks[col].clear();
+                for (int row = 0; row<CELLNUM; row++) {
+                    Node *node1=this->getChildByTag(row*CELLNUM+col);
+                    FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                    if (cell1) {
+                        cell1->_canTouch = false;
+                    }
+                    if (cellsStatus[row][col]==-1 || cellsStatus[row][col]==99 || cellsStatus[row][col]==100) {
+                        blocks[col].push_back(row);
+                    }
+                }
+                dropCount[col].clear();
+            }
+            
             DeleteFNMapIterator it = beDelMap.begin();
+            FruntCell *cellt;
             for (; it!=beDelMap.end(); it++) {
                 CellIndex index = intToColRow(it->first);
                 int count = (int)(it->first - colRowToInt(index.columnPos, index.rowPos));
@@ -888,21 +1180,19 @@ namespace Game
                     if (cell1) {
                         if (count==3) {
                             cell1->joinCellAnimation(DeleteAnimation, cell1->getToCellIndex());
-                        }
-                        if (cell1->isCellIndexEqual(index, temp)) {
-                            cell1->joinCellAnimation(LightAnimate, index);
                         }else
-                        {
-                            if (count==4) {
-                                cell1->joinCellAnimation(MoveAndDeleteAnimate, index);
+                            if (count>=4) {
+                                if (cell1->isCellIndexEqual(index, temp)) {
+                                    cell1->joinCellAnimation(LightAnimate, index);
+                                }else
+                                    cell1->joinCellAnimation(MoveAndDeleteAnimate, index);
                             }
-                            if (count>=5) {
-                                cell1->joinCellAnimation(MoveAndDeleteAnimate, index);
-                            }
-                        }
+                        cellt = cell1;
+                        dropCount[temp.columnPos].push_back(temp.rowPos);
                     }
                 }
             }
+            _lastDeleteCell = cellt;
         }
     }
     
@@ -1000,7 +1290,7 @@ namespace Game
             {
                 DeleteUnitList rowunit = * rowtotalunitdelit;
                 DeleteUnitList samemergeunit;
-                int saverowcolint;
+                long long saverowcolint;
                 DeleteUnitList colunit;
                 coltotalunitdelit = coltotalunitList.begin();
                 for (;coltotalunitdelit!=coltotalunitList.end() && !rowunit.empty();coltotalunitdelit++){
@@ -1018,17 +1308,17 @@ namespace Game
                     if (temp.size()!=rowunit2.size()+colunit2.size()) {//有重复元素
                         samemergeunit = temp;
                         //下面通过map计数找出重复的cell的int表述
-                        map<int,int> kkk;
+                        map<long long,long long> kkk;
                         DeleteUnitListIterator samemergeunit2it = samemergeunit2.begin();
                         for (; samemergeunit2it!=samemergeunit2.end(); samemergeunit2it++) {
                             long long value = kkk[*samemergeunit2it];
                             kkk[*samemergeunit2it] = ++value;
                         }
-                        map<int, int>::iterator kkkit = kkk.begin();
-                        int tempvalue = 0;
-                        int tempkey = 0;
+                        map<long long , long long>::iterator kkkit = kkk.begin();
+                        long long tempvalue = 0;
+                        long long tempkey = 0;
                         for (; kkkit!=kkk.end(); kkkit++) {
-                            int value = kkkit->second;
+                            long long value = kkkit->second;
                             if (value>=tempvalue) {
                                 tempvalue = value;
                                 tempkey = kkkit->first;
@@ -1044,7 +1334,7 @@ namespace Game
                     DeleteUnitList rowunittemp = rowunit;
                     DeleteUnitList colunittemp = colunit;
                     
-                    fnmap.insert(pair<int, DeleteUnitList>(samemergeunittemp.size(),samemergeunittemp));
+                    fnmap.insert(pair<long long, DeleteUnitList>(samemergeunittemp.size(),samemergeunittemp));
                     coltotalunitList.remove(colunittemp);
                     rowtotalunitList.erase(rowtotalunitdelit++);
                 }
@@ -1055,12 +1345,12 @@ namespace Game
                 rowtotalunitdelit = rowtotalunitList.begin();
                 for (;rowtotalunitdelit!=rowtotalunitList.end();rowtotalunitdelit++){
                     DeleteUnitList tempmap = * rowtotalunitdelit;
-                    fnmap.insert(pair<int, DeleteUnitList>(tempmap.size(),tempmap));
+                    fnmap.insert(pair<long long, DeleteUnitList>(tempmap.size(),tempmap));
                 }
                 coltotalunitdelit = coltotalunitList.begin();
                 for (;coltotalunitdelit!=coltotalunitList.end();coltotalunitdelit++){
                     DeleteUnitList tempmap = * coltotalunitdelit;
-                    fnmap.insert(pair<int, DeleteUnitList>(tempmap.size(),tempmap));
+                    fnmap.insert(pair<long long, DeleteUnitList>(tempmap.size(),tempmap));
                 }
             }
             
@@ -1132,7 +1422,8 @@ namespace Game
         }
         
         
-        
+        _lastDropCell = NULL;
+        _lastDeleteCell = NULL;
         for (int i = 0; i < CELLNUM; i++) {
             for (int j = 0; j < CELLNUM; j++) {
                 cellsStatus[i][j] = 0;
@@ -1182,6 +1473,8 @@ namespace Game
         for (int i=0; i<CELLNUM; i++) {
             list<int> temp;
             dropCount[i] = temp;
+            list<int> temp2;
+            blocks[i] = temp2;
         }
         loadGameMap();
         return true;
@@ -1208,24 +1501,27 @@ namespace Game
         int temp[9][9] = {
             {99, 99, 99, 99, 1, 99, 99,99,99},
             {99, 99, 99,  6, 7,  1, 99,99,99},
-            {99, 99,  5,  6, 3,  2,  1,99,99},
-            {99,  3,  4,  4,  7,  2,  2, 1,99},
-            { 1,  1,  3,  3,  5,  1,  3, 4, 1},
-            {99,  1,  4,  5,  6,  1,  2, 1,99},
-            {99, 99,  1,  5,  1,  5,  1,99,99},
-            {99, 99, 99,  1,  2,  1, 99,99,99},
-            {99, 99, 99, 99,  1, 99, 99,99,99}
+            {99, 99,  5,  6, 4,  2,  1,99,99},
+            {99,  4,  4,  4,  7,  2,  2, 1,99},
+            { 1,  1,100,  3,  100,  1,100, 4, 1},
+            {3,  1,  1,  1,  1,  1,  2, 1,7},
+            {4, 5,  1,  5,  1,  5,  1,3,4},
+            {3, 4, 5,  1,  2,  1, 3,4,5},
+            {3, 4, 5, 6,  1, 7, 3,4,5}
         };
         //make CELLNUM*CELLNUM cells
         for (int column=0; column<CELLNUM; column++) {
-            for (int row=CELLNUM-1; row>=0; row--) {
+            for (int row=0; row<CELLNUM; row++) {
                 if (temp[row][column]==-1) {
-                    createNewCell(column, row,false,temp[row][column],CELLNUM,-1);
+                    createNewCell(column, CELLNUM-1 - row,false,temp[row][column],CELLNUM,-1);
                 }else
                 if (temp[row][column]==99) {
-                    createNewCell(column, row,false,temp[row][column],CELLNUM,99);
+                    createNewCell(column, CELLNUM-1 - row,false,temp[row][column],CELLNUM,99);
                 }else
-                    createNewCell(column, row,false,temp[row][column],CELLNUM,0);
+                    if (temp[row][column]==100) {
+                        createNewCell(column, CELLNUM-1 - row,false,temp[row][column],CELLNUM,100);
+                    }else
+                        createNewCell(column, CELLNUM-1 - row,false,temp[row][column],CELLNUM,0);
             }
         }
     }

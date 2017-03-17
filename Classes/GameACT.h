@@ -87,12 +87,13 @@ namespace Game {
         int middlerDropCenter;
         
 		Category *cy;
-		FruntCell *_tempCell1;
-		FruntCell *_tempCell2;
-        
+		FruntCell *_lastDeleteCell;
+        FruntCell *_lastDropCell;
         long long colRowToInt(int col,int row);
         CellIndex intToColRow(long long colrowint);
         long long colRowToInt2(int col,int row);
+        long long squareandbehand(int col1,int col2,int col3);
+        CellSquare benhandsquare(long long square);
         CellIndex preCanDeleteTargetCellIndex(long long colrowint);
         CellIndex preCanDeleteCurrentCellIndex(long long colrowint);
         
@@ -103,8 +104,9 @@ namespace Game {
         CellIndex _lastedClick2;
         
         list<int> dropCount[CELLNUM];
-        
-        
+        list<int> blocks[CELLNUM];
+//        void IIIIII(int map[][CELLNUM]);
+        void IIIIII();
         void loadGameMap();
         /*
          -1     NULL
@@ -114,10 +116,11 @@ namespace Game {
          3      droping
          4      deleteing
          5      deleted
-         99     storn
-         100    k.o.
+         99     storn//可消除物
+         100    k.o.//不可消除物
          */
         int cellsStatus[CELLNUM][CELLNUM];
+        int tempcellsStatus[CELLNUM][CELLNUM];
         DeleteFNMap prefnmap;
         struct CmpByValue {
             bool operator()(const PAIR& lhs, const PAIR& rhs) {
@@ -149,6 +152,8 @@ namespace Game {
         list<int> _isDropping;
         list<int> _isDeleteing;
         list<int> _isMoving;
+        list<int> _islighting;
+        list<int> _isMoveAndDeleteing;
         
         void findCurrent();
         DeleteFNMap TODO_FindDeleteCells2(int row,int column,int row2,int column2);
@@ -184,8 +189,11 @@ namespace Game {
         virtual void movingComplete(Layer *cell);
         virtual void movingComplete2(Layer *cell);
         virtual void dropComplete(Layer *cell);
-        virtual void moveAndDeleteComplete(Layer *cell);
+        virtual void lighting(Layer *cell);
+        virtual void lightComplete(Layer *cell);
         
+        virtual void moveAndDeleteing(Layer *cell);
+        virtual void moveAndDeleteComplete(Layer *cell);
     };
 }
     
