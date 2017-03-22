@@ -46,7 +46,7 @@ namespace Game
         return temp;
     }
     //col1 左边界，col2右边界，col3掉落口
-    long long GameLayer::squareandbehand(int col1,int col2,int col3)
+    long long GameLayer::squareandbehand(int col1,int col2,long long col3)
     {
         long long temp = (long long)col1 + (long long)col2*100 + (long long)col3*10000;
         return temp;
@@ -55,10 +55,9 @@ namespace Game
     CellSquare GameLayer::benhandsquare(long long square)
     {
         CellSquare tsquare;
-        tsquare.columnPos3 = (int)square/10000;
-        tsquare.columnPos2 = (int)(square-(tsquare.columnPos3*10000))/100;
-        tsquare.columnPos1 = (int)(square-(tsquare.columnPos3*10000+tsquare.columnPos2*100));
-        
+        tsquare.columnPos3 = square/10000;
+        tsquare.columnPos2 = int((square-(tsquare.columnPos3*10000))/100);
+        tsquare.columnPos1 = int(square-(tsquare.columnPos3*10000+tsquare.columnPos2*100));
         
         return tsquare;
     }
@@ -128,8 +127,9 @@ namespace Game
                     int ff=i;
                     for (int column=0; column<count; column++) {
                         ff--;
-                        Node *node=this->getChildByTag(row*CELLNUM+ff);
-                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
+//                        Node *node=this->getChildByTag(row*CELLNUM+ff);
+//                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
+                        FruntCell *cell = getCellWithIndex({row,ff});
                         if (cell){
                             unitlist.push_back(colRowToInt(ff, row));
                             log("---> GameLayer : destory cell [%d][%d] findRowDelete",row,ff);
@@ -164,8 +164,9 @@ namespace Game
                     for (int column=0; column<count; column++) {
                         
                         ff--;
-                        Node *node=this->getChildByTag(row*CELLNUM+ff);
-                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
+//                        Node *node=this->getChildByTag(row*CELLNUM+ff);
+//                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
+                        FruntCell *cell = getCellWithIndex({row,ff});
                         if (cell){
                             if (row1==row && col1==ff) {
                                 delmap.push_back(colRowToInt(col2, row2));
@@ -208,8 +209,9 @@ namespace Game
                     int ff=i;
                     for (int row=0; row<count; row++) {
                         ff--;
-                        Node *node=this->getChildByTag(ff*CELLNUM+column);
-                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
+//                        Node *node=this->getChildByTag(ff*CELLNUM+column);
+//                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
+                        FruntCell *cell = getCellWithIndex({ff,column});
                         if (cell) {
                             if (row1==ff && col1==column) {
                                 delmap.push_back(colRowToInt(col2, row2));
@@ -252,8 +254,9 @@ namespace Game
                     int ff=i;
                     for (int row=0; row<count; row++) {
                         ff--;
-                        Node *node=this->getChildByTag(ff*CELLNUM+column);
-                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
+//                        Node *node=this->getChildByTag(ff*CELLNUM+column);
+//                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
+                        FruntCell *cell = getCellWithIndex({ff,column});
                         if (cell) {
                             delmap.push_back(colRowToInt(column, ff));
                             //delmap.insert(pair<int, int>(column,ff));
@@ -494,7 +497,7 @@ namespace Game
     void GameLayer::direction(MoveDirection dir,CellIndex lastedClick)
     {
         CellIndex _tempIndex = compute(dir,lastedClick);
-        if (_tempIndex.columnPos!=-1 && _tempIndex.rowPos!=-1 && cellsStatus[_tempIndex.rowPos][_tempIndex.columnPos]==0 && cellsStatus[lastedClick.rowPos][lastedClick.columnPos]==0) {
+        if (_tempIndex.columnPos!=-1 && _tempIndex.rowPos!=-1  && getCellWithIndex(_tempIndex) && getCellWithIndex(lastedClick)){
             registTwoCell(lastedClick, _tempIndex);
         }
     }
@@ -569,55 +572,36 @@ namespace Game
      */
     void GameLayer::willAnimate(Layer *cell)
     {
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        if (temp->getCellIndex().rowPos==5 && temp->getCellIndex().columnPos==4 ) {
-            
-        }
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=1;
+        
     }
     
-    void GameLayer::exchanging(Layer *cell)
+    void GameLayer::moving(Layer *cell)
     {
         _isMoving.push_back(1);
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=2;
     }
+    
     void GameLayer::deleteing(Layer *cell)
     {
         _isDeleteing.push_back(1);
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=4;
     }
     void GameLayer::droping(Layer *cell)
     {
         _isDropping.push_back(1);
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=3;
     }
     
     
     void GameLayer::movingComplete(Layer *cell)
     {
-//		pthread_mutex_lock(&mutex);
         FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=0;
-//		pthread_mutex_unlock(&mutex);
-        
-        temp->joinCellAnimation(OnlyMoveAnimation2, temp->getToCellIndex());
-        
+        temp->joinCellAnimation(OnlyMoveAnimation2, temp->getPreviseCellIndex(),temp->getCellIndex());
         if (!_isMoving.empty()) {
             _isMoving.pop_back();
         }
     }
-    
-    
-    
+
     void GameLayer::movingComplete2(Layer *cell)
     {
-        //		pthread_mutex_lock(&mutex);
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=0;
-        //		pthread_mutex_unlock(&mutex);
+
         if (!_isMoving.empty()) {
             _isMoving.pop_back();
         }
@@ -625,27 +609,14 @@ namespace Game
 
     void GameLayer::deleteComplete(Layer *cell)
     {
-//        pthread_mutex_lock(&mutex);
-    
         FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=5;
         this->removeChild(cell);
-        
-        
-//        pthread_mutex_unlock(&mutex);
         if (!_isDeleteing.empty()) {
             _isDeleteing.pop_back();
         }
         if (_lastDeleteCell == temp) {//所有cell删除之后执行下落//先下落，再根据＝5的状态判断左右下落
             _lastDeleteCell = NULL;
-            //            IIIIII(cellsStatus);
-            
-            for (int i=0; i<CELLNUM; i++) {
-                for (int j=0; j<CELLNUM; j++) {
-                    tempcellsStatus[i][j] = cellsStatus[i][j];
-                }
-            }
-            
+            qujianlist = findQuJian();
             IIIIII();
         }
     }
@@ -653,25 +624,15 @@ namespace Game
     void GameLayer::lighting(Layer *cell)
     {
         _islighting.push_back(1);
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=2;
     }
     void GameLayer::lightComplete(Layer *cell)
     {
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=0;
-        
         if (!_islighting.empty()) {
             _islighting.pop_back();
         }
-        if (_lastDeleteCell == temp) {//所有cell删除之后执行下落//先下落，再根据＝5的状态判断左右下落
+        if (_lastDeleteCell == cell) {//所有cell删除之后执行下落//先下落，再根据＝5的状态判断左右下落
             _lastDeleteCell = NULL;
-            
-            for (int i=0; i<CELLNUM; i++) {
-                for (int j=0; j<CELLNUM; j++) {
-                    tempcellsStatus[i][j] = cellsStatus[i][j];
-                }
-            }
+            qujianlist = findQuJian();
             IIIIII();
         }
     }
@@ -679,13 +640,10 @@ namespace Game
     void GameLayer::moveAndDeleteing(Layer *cell)
     {
         _isMoveAndDeleteing.push_back(1);
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=2;
     }
     void GameLayer::moveAndDeleteComplete(Layer *cell)
     {
         FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-        cellsStatus[temp->getCellIndex().rowPos][temp->getCellIndex().columnPos]=5;
         this->removeChild(cell);
     
         if (!_isMoveAndDeleteing.empty()) {
@@ -693,46 +651,251 @@ namespace Game
         }
         if (_lastDeleteCell == temp) {
             _lastDeleteCell = NULL;
-            
-            for (int i=0; i<CELLNUM; i++) {
-                for (int j=0; j<CELLNUM; j++) {
-                    tempcellsStatus[i][j] = cellsStatus[i][j];
-                }
-            }
-            
+            qujianlist = findQuJian();
             IIIIII();
         }
+    }
+    
+    
+    QUJIANlist GameLayer::findQuJian()
+    {
+        //尝试从cell的可掉落口?统计出某个区间右那几个下落口负责，具体格式//(区间开头,区间结尾)(下落口)//，下落口可能相同，可能不同
+        list<long long>qujianlist;
+        list<long long>chuizhiqujianlist;
+        //统计下落口及其负责的区间
+        list<long long>::iterator frontdropTumpit;
+        list<long long>::iterator behinddropTumpit;
+        behinddropTumpit = frontdropTumpit = dropTumpit = dropTump.begin();
+        
+        for (int i=0; dropTumpit!=dropTump.end(); dropTumpit++,i++) {
+            behinddropTumpit = frontdropTumpit = dropTumpit;
+            
+            CellIndex index = intToColRow(*dropTumpit);
+            if (isNormalCellIndex({index.rowPos,index.columnPos})) {
+                
+                CellIndex behindindex;
+                CellIndex frontindex;
+                //找左侧可下落的
+                bool haveleft = false;
+                for (behinddropTumpit--; behinddropTumpit!=dropTump.begin(); behinddropTumpit--) {
+                    CellIndex index = intToColRow(*behinddropTumpit);
+                    if (isNormalCellIndex({index.rowPos,index.columnPos})) {
+                        behindindex = index;
+                        haveleft = true;
+                        break;
+                    }
+                }
+                //找右侧可下落的
+                bool haveright = false;
+                for (frontdropTumpit++; frontdropTumpit!=dropTump.end(); frontdropTumpit++) {
+                    CellIndex index = intToColRow(*frontdropTumpit);
+                    if (isNormalCellIndex({index.rowPos,index.columnPos})) {
+                        frontindex = index;
+                        haveright = true;
+                        break;
+                    }
+                }
+                
+                if (!haveleft) {//左侧没有可下落的
+                    if (index.columnPos!=0) {//非最最左边界
+                        qujianlist.push_front(squareandbehand(index.columnPos ,0, colRowToInt(index.columnPos, index.rowPos)));
+                    }
+                }else if (haveleft && behindindex.columnPos<index.columnPos) {//左侧右可下落的，且不靠近
+                    qujianlist.push_front(squareandbehand(index.columnPos ,behindindex.columnPos, colRowToInt(index.columnPos, index.rowPos)));
+                }
+                if (!haveright) {//右侧没可下落的
+                    if (index.columnPos!=CELLNUM-1) {//非最右侧边界
+                        qujianlist.push_front(squareandbehand(index.columnPos ,CELLNUM-1, colRowToInt(index.columnPos, index.rowPos)));
+                    }
+                }else
+                    if (haveright && frontindex.columnPos>index.columnPos) {//右侧有可下落的，切不靠近
+                        qujianlist.push_front(squareandbehand(index.columnPos ,frontindex.columnPos, colRowToInt(index.columnPos, index.rowPos)));
+                    }
+                if ((haveleft && behindindex.columnPos+1==index.columnPos &&
+                     haveright && frontindex.columnPos-1==index.columnPos)||
+                    (!haveleft && index.columnPos==0 &&
+                     haveright && frontindex.columnPos-1==index.columnPos)||
+                    (!haveright && index.columnPos==CELLNUM-1 &&
+                     haveleft && behindindex.columnPos+1==index.columnPos)) {//左右都有可下落且靠近的/左侧没有可下落且是左边边界和且右边有可下落且靠近的/右侧没有可下落且是有边界和左侧有可下落且靠近的
+                        qujianlist.push_front(squareandbehand(index.columnPos ,index.columnPos, colRowToInt(index.columnPos, index.rowPos)));
+                    }
+            }
+        }
+        
+        
+        return qujianlist;
     }
     
 //    void GameLayer::IIIIII(int tempcellsStatus2xxx[][CELLNUM])
     void GameLayer::IIIIII()
     {
-//        int tempcellsStatus[CELLNUM][CELLNUM];
-//        for(int i=0;i<m;i++)
-//            for(int j=0;j<n;j++)
-//                tempcellsStatus[i][j] = p[i*m+j];
-//        
-//        
+        //尝试可左右移动到＝5的cell
+        bool hascehua = false;
+        {
+            for (int row = 0; row<CELLNUM; row++) {
+                JJJJJJ();//垂直下落
+                list<long long>::iterator chuizhiqujianlistit = qujianlist.begin();
+                for (; chuizhiqujianlistit!=qujianlist.end(); chuizhiqujianlistit++) {
+                    CellSquare square = benhandsquare(*chuizhiqujianlistit);
+                    
+                    DDDDDD(square.columnPos1, square.columnPos2, 0);//递归填坑
+                    if (KKKKKK(square, row)) {//侧滑填坑
+                        IIIIII();
+                    }
+                    for (int i=0; i<CELLNUM; i++) {
+                        addCount[i] = 1;
+                    }
+                }
+            }
+        }
         
-        for (int col=0; col<CELLNUM; col++) {//先下落现有的，在下落新增的，在左右下落
+    }
+    
+    FruntCell *GameLayer::DDDDDD(int fromcol,int endcol,long long dropcolrow)
+    {
+        CellIndex returnColrow = {-1,-1};
+        if (dropcolrow!=0) {
+            returnColrow = intToColRow(dropcolrow);
+        }
+        //
+        //发现有可侧滑时，通过当前是左往右，还是右往左来拉可侧滑口左侧或右侧的cell
+        //
+        if (fromcol==endcol) {
+            for (int row = 0; row<CELLNUM; row++) {
+                
+                bool zhongjianyoumeiyouzhedang = false;
+                for (int i=row; i<CELLNUM; i++) {
+                    if (isKoCellIndex({i,fromcol})) {
+                        zhongjianyoumeiyouzhedang = true;
+                    }
+                }
+                FruntCell *cell = getCellWithIndex({row,fromcol});
+                if (isNormalCellIndexAndNullCell({row,endcol})&&
+                    !zhongjianyoumeiyouzhedang) {
+                    cell = createNewCell2(endcol, (int)addCount[endcol]+row, endcol, row, CELLNUM);
+                    CellIndex tempindex;
+                    tempindex.columnPos = endcol;
+                    tempindex.rowPos = row;
+                    cell->joinCellAnimation(DropAnimation, tempindex,{(int)addCount[endcol]+row,endcol});
+                    addCount[endcol]=addCount[endcol]+1;
+                    _lastDropCell = cell;
+                }
+                if (cell && row==returnColrow.rowPos) {
+                    return cell;
+                }
+            }
+            return _lastDropCell;
+        }
+        if (fromcol>endcol) {
+            for (int col=endcol; col<fromcol; col++) {
+                
+                long long currenttopreturncolrow = 0;
+                for (int row=0; row<CELLNUM; row++) {
+                    if (isNormalCellIndex({row,col}) &&
+                        isNormalCellIndex({row+1,col+1})) {
+                        currenttopreturncolrow = colRowToInt(col+1,row+1);
+                    }
+                }
+                
+                CellIndex topIndex = intToColRow(currenttopreturncolrow);
+                topIndex.rowPos = topIndex.rowPos-1;
+                for (int row=0; row<CELLNUM; row++) {
+                    bool zhongjianyoumeiyouzhedang = false;
+                    for (int i=row; i<topIndex.rowPos; i++) {
+                        if (isKoCellIndex({i,col})) {
+                            zhongjianyoumeiyouzhedang = true;
+                        }
+                    }
+                    FruntCell *cell = getCellWithIndex({row,col});
+                    if (cell==NULL && isNormalCellIndexAndNullCell({row,col}) && !zhongjianyoumeiyouzhedang && row<=topIndex.rowPos) {
+                        cell = DDDDDD(fromcol, col+1, currenttopreturncolrow);
+                        if (cell==NULL) {
+                            
+                        }
+                        cell->joinCellAnimation(DropAnimation, {row,col}, cell->getCellIndex());
+                    }
+                    if (row==returnColrow.rowPos && returnColrow.rowPos!=-1) {
+                        if (cell==NULL) {
+                            
+                        }
+                        return cell;
+                    }
+                }
+                
+                
+                
+            }
+        }
+        if (fromcol<endcol) {
+            for (int col = endcol; col>fromcol; col--) {
+
+                long long currenttopreturncolrow = 0;
+                for (int row=0; row<CELLNUM; row++) {
+                    if (isNormalCellIndexAndNullCell({row,col}) &&
+                        isNormalCellIndex({row+1,col-1})) {
+                        currenttopreturncolrow = colRowToInt(col-1,row+1);
+                    }
+                }
+                CellIndex topIndex = intToColRow(currenttopreturncolrow);
+                topIndex.rowPos = topIndex.rowPos-1;
+                for (int row=0; row<CELLNUM; row++) {
+                    bool zhongjianyoumeiyouzhedang = false;
+                    for (int i=row; i<topIndex.rowPos; i++) {
+                        if (isKoCellIndex({i,col})) {
+                            zhongjianyoumeiyouzhedang = true;
+                        }
+                    }
+                    
+                    FruntCell *cell = getCellWithIndex({row,col});
+                    if (cell==NULL && isNormalCellIndexAndNullCell({row,col}) && !zhongjianyoumeiyouzhedang&& row<=topIndex.rowPos) {
+                        cell = DDDDDD(fromcol, col-1, currenttopreturncolrow);
+                        if (cell==NULL) {
+                            
+                        }
+                        cell->joinCellAnimation(DropAnimation, {row,col}, cell->getCellIndex());
+                    }
+                    if (row==returnColrow.rowPos && returnColrow.rowPos!=-1) {
+                        if (cell==NULL) {
+                            
+                        }
+                        return cell;
+                    }
+                }
+                
+            }
+        }
+
+        return  NULL;
+    }
+    
+    void GameLayer::JJJJJJ()
+    {
+        //重置dropCount中每列的空缺cell数量
+        for (int j=0; j<CELLNUM; j++) {
+            dropCount[j].clear();
+            for (int i = 0; i<CELLNUM; i++) {
+                if (isNormalCellIndexAndNullCell({i,j})) {
+                    dropCount[j].push_back(i);
+                }
+            }
+        }
+        for (int col=0; col<CELLNUM; col++) {//先下落现有的
             list<int> tempdrop = dropCount[col];
             if (tempdrop.empty()) {
                 continue;
             }
-    
             //应该从下向上统计，遇到＝5list中的cell需下落个数count ＋1，遇到＝－1、100、99，count重置
             map<long long ,int> temodropmap;
             int ddcount = 0;
             for (int row = 0; row<CELLNUM; row++) {
-                Node *node1=this->getChildByTag(row*CELLNUM+col);
-                FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
-                if (cell1 && ddcount>0 && (tempcellsStatus[row][col]!=-1 && tempcellsStatus[row][col]!=99 && tempcellsStatus[row][col]!=100 && tempcellsStatus[row][col]!=5)) {//正常cell,切可下落个数不为空
+                FruntCell *cell1=getCellWithIndex({row,col});
+                if (cell1 && ddcount>0){//正常cell,切可下落个数不为空
                     temodropmap.insert(pair<long long, int>(colRowToInt(col, row),ddcount));
                 }
-                if (tempcellsStatus[row][col]==5) {//遇到可下落点，可下落书＋＋
+                if (isNormalCellIndexAndNullCell({row,col})) {//遇到可下落点，可下落书＋＋
                     ddcount++;
                 }
-                if (tempcellsStatus[row][col]==-1 || tempcellsStatus[row][col]==99 || tempcellsStatus[row][col]==100) {//当遇到阻碍物时，重置加入flag
+                if (!isNormalCellIndex({row,col})) {//当遇到阻碍物时，重置加入flag
                     ddcount=0;
                 }
             }
@@ -741,161 +904,105 @@ namespace Game
                 for (; temodropmapit!=temodropmap.end(); temodropmapit++) {
                     CellIndex index = intToColRow(temodropmapit->first);
                     int tempcount = temodropmapit->second;
-                    Node *node1=this->getChildByTag(index.rowPos*CELLNUM+index.columnPos);
-                    FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                    FruntCell *cell1=getCellWithIndex({index.rowPos,index.columnPos});
                     if (cell1 && tempcount>0) {
-                        
-                        tempcellsStatus[index.rowPos][index.columnPos] = 5;
                         index.rowPos-=tempcount;
-                        cell1->joinCellAnimation(DropAnimation, index);
-                        tempcellsStatus[index.rowPos][index.columnPos] = 0;
+                        cell1->joinCellAnimation(DropAnimation, index,cell1->getCellIndex());
                     }
                 }
             }
         }
-        
-        //尝试可左右移动到＝5的cell
-        //尝试从cell的可掉落口?统计出某个区间右那几个下落口负责，具体格式//(区间开头,区间结尾)(下落口)//，下落口可能相同，可能不同
-        list<long long>qujianlist;
-        int lastindexcol = 0;
-        for (int col=0; col<CELLNUM; col++) {
-            if (tempcellsStatus[CELLNUM-1][col]!=99&&
-                tempcellsStatus[CELLNUM-1][col]!=100&&
-                tempcellsStatus[CELLNUM-1][col]!=-1) {//找出掉落口
-                
-                
-                bool isleft = false;
-                if (((
-                      tempcellsStatus[CELLNUM-1][col-1]==99||
-                      tempcellsStatus[CELLNUM-1][col-1]==100||
-                      tempcellsStatus[CELLNUM-1][col-1]==-1
-                      )||
-                     col==0
-                     )) {//最左侧掉落口,或普通左侧掉落口,可能左右合一
-                    isleft = true;
-                }
-                bool isright = false;
-                if (((
-                      tempcellsStatus[CELLNUM-1][col+1]==99||
-                      tempcellsStatus[CELLNUM-1][col+1]==100||
-                      tempcellsStatus[CELLNUM-1][col+1]==-1
-                      )||
-                     col==CELLNUM-1
-                     )) {//最右侧掉落口,或普通右侧掉落口,可能左右合一
-                    isright = true;
-                }
-                if (isleft) {
-                    qujianlist.push_front(squareandbehand(col, lastindexcol, col));
-                }
-                if (isright) {
-                    for (int temp = col+1; temp<CELLNUM; temp++) {
-                        if ((tempcellsStatus[CELLNUM-1][temp]!=99&&
-                            tempcellsStatus[CELLNUM-1][temp]!=100&&
-                            tempcellsStatus[CELLNUM-1][temp]!=-1)
-                            ) {//找出掉落口
-                            qujianlist.push_front(squareandbehand(col, temp-1, col));
-                        }
-                        if (temp==CELLNUM-1) {
-                            qujianlist.push_front(squareandbehand(col, temp, col));
-                        }
-                    }
-                }
-                if (!isleft && !isright) {
-                    qujianlist.push_front(squareandbehand(col, col, col));
-                }
-                lastindexcol = col;
-            }
-        }
+    }
+    
+    bool GameLayer::KKKKKK(CellSquare square,int row)
+    {
         bool hascehua = false;
-        for (int col=0; col<CELLNUM; col++) {//侧滑
-            for (int row = CELLNUM-1; row>=0; row--) {
-                if (row==3 && col ==2) {
-                    
+        if (square.columnPos1==square.columnPos2) {
+            int col = square.columnPos1;
+            if (1) {
+                if (isNormalCellIndexAndNullCell({row,col}) &&
+                    !isNormalCellIndex({row+1,col}) &&
+                    isNormalCellIndexAndCell({row-1,col})) {
+                    FruntCell *cell1= getCellWithIndex({row+1,col+1});
+                    FruntCell *cell2= getCellWithIndex({row+1,col-1});
+                    if (cell1 && isNormalCellIndex({row+1,col+1})) {
+                        CellIndex index;
+                        index.rowPos = row;
+                        index.columnPos = col;
+                        cell1->joinCellAnimation(DropAnimation, index,cell1->getCellIndex());
+                        hascehua = true;
+                    }else
+                        if (cell2 && isNormalCellIndex({row+1,col-1})) {
+                            CellIndex index;
+                            index.rowPos = row;
+                            index.columnPos = col;
+                            cell1->joinCellAnimation(DropAnimation, index,cell1->getCellIndex());
+                            hascehua = true;
+                        }
                 }
-                if (tempcellsStatus[row][col]==5 && (tempcellsStatus[row+1][col]==99 || tempcellsStatus[row+1][col]==100 || tempcellsStatus[row+1][col]==-1) && tempcellsStatus[row-1][col]!=5) {
-                    list<long long>::iterator qujianlistit = qujianlist.begin();
-                    for (; qujianlistit!=qujianlist.end(); qujianlistit++) {
-                        CellSquare square = benhandsquare(*qujianlistit);
-                        if ((col>=square.columnPos1 && col<=square.columnPos2)||
-                            (col>=square.columnPos2 && col<=square.columnPos1)) {
-                            if (square.columnPos3>=col) {
-                                if (col+1!=CELLNUM-1 && row+1!=CELLNUM-1 ) {
-                                    Node *node1=this->getChildByTag((row+1)*CELLNUM+col+1);
-                                    FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
-                                    if (cell1 && tempcellsStatus[row+1][col+1]==0) {
-                                        tempcellsStatus[row+1][col+1]=5;
-                                        CellIndex index;
-                                        index.rowPos = row;
-                                        index.columnPos = col;
-                                        cell1->joinCellAnimation(DropAnimation, index);
-                                        tempcellsStatus[index.rowPos][index.columnPos]=0;
-                                
-                                        hascehua = true;
-                                    }
-                                    
-                                }
-                            }else
-                            if (square.columnPos3<=col) {
-                                if (col-1!=0 && row+1!=CELLNUM-1 && (tempcellsStatus[row+1][col-1]==0)) {
-                                    Node *node1=this->getChildByTag((row+1)*CELLNUM+col-1);
-                                    FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
-                                    
-                                    if (cell1 && tempcellsStatus[row+1][col+1]==0) {
-                                        tempcellsStatus[row+1][col-1]=5;
-                                        CellIndex index;
-                                        index.rowPos = row;
-                                        index.columnPos = col;
-                                        cell1->joinCellAnimation(DropAnimation, index);
-                                        tempcellsStatus[index.rowPos][index.columnPos]=0;
-                                        
-                                        hascehua = true;
-                                    }
-                                    
-                                }
+            }
+        }
+        if (square.columnPos1>square.columnPos2) {
+            for (int col=square.columnPos1; col>=square.columnPos2; col--) {
+                if (1) {
+                    if (isNormalCellIndexAndNullCell({row,col}) &&
+                        !isNormalCellIndex({row+1,col}) &&
+                        isNormalCellIndexAndCell({row-1,col})) {
+                        if (col+1!=CELLNUM-1 && row+1!=CELLNUM-1) {
+                            FruntCell *cell1=getCellWithIndex({row+1,col+1});
+                            if (cell1) {
+                                CellIndex index;
+                                index.rowPos = row;
+                                index.columnPos = col;
+                                cell1->joinCellAnimation(DropAnimation, index,cell1->getCellIndex());
+                                hascehua = true;
                             }
                         }
                     }
                 }
             }
         }
-        for (int j=0; j<CELLNUM; j++) {
-            dropCount[j].clear();
-            for (int i = 0; i<CELLNUM; i++) {
-                if (tempcellsStatus[i][j]==5) {
-                    dropCount[j].push_back(i);
+        if (square.columnPos1<square.columnPos2) {
+            for (int col=square.columnPos1+1; col<=square.columnPos2; col++) {
+                if (1) {
+                    if (isNormalCellIndexAndNullCell({row,col}) &&
+                        !isNormalCellIndex({row+1,col}) &&
+                        isNormalCellIndexAndCell({row-1,col})) {
+                        if (col-1!=0 && row+1!=CELLNUM-1) {
+                            FruntCell *cell1 = getCellWithIndex({row+1,col-1});
+                            if (cell1) {
+                                
+                                CellIndex index;
+                                index.rowPos = row;
+                                index.columnPos = col;
+                                cell1->joinCellAnimation(DropAnimation, index,cell1->getCellIndex());
+                                hascehua = true;
+                            }
+                            
+                        }
+                    }
                 }
             }
         }
-        return;
-        if (hascehua) {
-            IIIIII();
-        }else
-        {
-            list<long long>::iterator qujianlistit = qujianlist.begin();
-            for (; qujianlistit!=qujianlist.end(); qujianlistit++) {
-                CellSquare square = benhandsquare(*qujianlistit);
-                if (square.columnPos1>=square.columnPos2) {
-                    for (int col = square.columnPos1; col>=square.columnPos2; col--) {
-                        
-                    }
-                }else
-                    for (int col = square.columnPos1; col<=square.columnPos2; col++) {
-                        
-                    }
-            }
-        }
-        //＝5cellstatus的index上方有遮挡物的时候可以用老的cell左右下落，不然只能靠新增cell下落的左右下落
+        
+        return hascehua;
     }
     
     void GameLayer::dropComplete(Layer *cell)
     {
-//		pthread_mutex_lock(&mutex);
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
-		cellsStatus[temp->getToCellIndex().rowPos][temp->getToCellIndex().columnPos]=0;
-//		pthread_mutex_unlock(&mutex);
-        
         if (!_isDropping.empty()) {
             _isDropping.pop_back();
+        }
+        if (cell==_lastDropCell) {
+            _lastDropCell = NULL;
+            for (int col = 0; col<CELLNUM; col++) {
+                for (int row = 0; row<CELLNUM; row++) {
+                    FruntCell *cell1=getCellWithIndex({row,col});
+                    if (cell1) {
+                        cell1->_canTouch = true;
+                    }
+                }
+            }
         }
     }
     
@@ -904,20 +1011,10 @@ namespace Game
     
     void GameLayer::timeCallBack()
     {
-        
-//        pthread_mutex_lock(&mutex);
-        
-        ;
-    
-        //TODO_DropCell();
-        //TODO_DeleteCell();
-        //TODO_ResetCell();
-        if (_isMoving.empty() && _isDropping.empty() && _isDeleteing.empty()) {
+//        TODO_ResetCell();
+        if (_isMoving.empty() && _isDropping.empty() && _isDeleteing.empty() && _isMoveAndDeleteing.empty()) {
             findCurrent();
         }
-
-//		pthread_mutex_unlock(&mutex);
-        
     }
 
     
@@ -951,13 +1048,12 @@ namespace Game
                             if (count>=5) {
                                 
                             }
-                            cellsStatus[temp.rowPos][temp.columnPos]=0;
                         }
                     }else
                     {
                         if (node1) {
                             FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
-                            cell1->joinCellAnimation(DeleteAnimation, temp);
+                            cell1->joinCellAnimation(DeleteAnimation, temp,cell1->getCellIndex());
                             cell1->setCellStatus(cellDestory);
                         }
                     }
@@ -973,43 +1069,25 @@ namespace Game
         for (int i=0; i<CELLNUM; i++) {
             for (int j=0; j<CELLNUM; j++) {
                 
-                Node *node=this->getChildByTag(i*CELLNUM+j);
-                FruntCell *cell=dynamic_cast<FruntCell *>(node);
-                
-                if (cell &&
-                    cellsStatus[cell->getCellIndex().rowPos][cell->getCellIndex().columnPos]==0 &&
-                    !cell->isCellIndexEqual(cell->getCellIndex(), cell->getToCellIndex()) &&
+                FruntCell *cell=getCellWithIndex({i,j});
+                if (cell  &&
+                    !cell->isCellIndexEqual(cell->getCellIndex(), cell->getPreviseCellIndex()) &&
                     !cell->isAnimation()) {
                     
-                    Node *node2=this->getChildByTag(cell->getToCellIndex().rowPos*CELLNUM+cell->getToCellIndex().columnPos);
+                    Node *node2=this->getChildByTag(cell->getPreviseCellIndex().rowPos*CELLNUM+cell->getPreviseCellIndex().columnPos);
                     FruntCell *cell2=dynamic_cast<FruntCell *>(node2);
                     
                     if (cellsStatus[cell2->getCellIndex().rowPos][cell2->getCellIndex().columnPos]==0) {
-                        cell->joinCellAnimation(OnlyMoveAnimation2, cell->getToCellIndex());
+                        cell->joinCellAnimation(OnlyMoveAnimation2, cell->getPreviseCellIndex(),cell->getCellIndex());
                     }else
-                        cell->setNowIndex(cell->getToCellIndex().rowPos, cell->getToCellIndex().columnPos);
+                        cell->setNowIndex(cell->getPreviseCellIndex().rowPos, cell->getPreviseCellIndex().columnPos);
                     
                 }
             }
         }
         return true;
     }
-    //垂直方向最上一行有固定消除物的，不可添加新的cell，从固定的点物理偏移过来
-    //垂直方向最上一行有固定不可消除物的，不可添加新的cell,从固定的点无聊偏移过来
-    bool GameLayer::TODO_DropCell()
-    {
-        for (int column=0; column<CELLNUM; column++) {
-            dropCount[column].clear();
-            for (int row=CELLNUM-1; row>=0; row--) {
-                int type = cellsStatus[row][column];
-                if (type==5) {
-                    dropCount[column].push_back(column);
-                }
-            }
-        }
-        
-        return true;
-    }
+
     
     void GameLayer::showTag()
     {
@@ -1036,7 +1114,6 @@ namespace Game
             DeleteFNMapIterator it = prefnmap.begin();
             bool have = false;
             for (; it!=prefnmap.end(); it++) {
-                
                 CellIndex index1 = preCanDeleteCurrentCellIndex(it->first);
                 CellIndex index2 = preCanDeleteTargetCellIndex(it->first);
                 if ((cell1->isCellIndexEqual(c1, index1) && cell2->isCellIndexEqual(c2, index2)) ||
@@ -1047,54 +1124,20 @@ namespace Game
                 }
             }
             if (have) {
-                cell1->joinCellAnimation(OnlyMoveAnimation2, c2);
-                cell2->joinCellAnimation(OnlyMoveAnimation2, c1);
+                cell1->joinCellAnimation(OnlyMoveAnimation2, c2,cell1->getCellIndex());
+                cell2->joinCellAnimation(OnlyMoveAnimation2, c1,cell1->getCellIndex());
             }else
             {
-                cell1->joinCellAnimation(OnlyMoveAnimation, c2);
-                cell2->joinCellAnimation(OnlyMoveAnimation, c1);
+                cell1->joinCellAnimation(OnlyMoveAnimation, c2,cell1->getCellIndex());
+                cell2->joinCellAnimation(OnlyMoveAnimation, c1,cell1->getCellIndex());
             }
-            
         }
     }
 
     
     
    
-    void GameLayer::addNewCells(int column)
-    {
-
-        for (int row=0; row<CELLNUM; row++) {
-            int count=0;
-            for (int index=row; index<14; index++) {
-                Node *node=this->getChildByTag(index*CELLNUM+column);
-                FruntCell *cell=dynamic_cast<FruntCell *>(node);
-                if (cellsStatus[index][column]==5||
-                    cellsStatus[index][column]==1||
-                    cellsStatus[index][column]==3) {
-                    
-                    count++;
-                    if (cellsStatus[index][column]==3) {
-                        count=cell->getToCellIndex().rowPos;
-                    }
-                }else if(node!=NULL)
-                {
-                    CellIndex temp;
-                    if (cellsStatus[index][column]==3) {
-                        temp.rowPos=count+1;
-                    }else
-                        temp.rowPos=index-count;
-                    temp.columnPos=column;
-                    if (!cell->isCellIndexEqual(temp, cell->getCellIndex())) {
-                        cell->joinCellAnimation(DropAnimation, temp);
-                        log("---> GameLayer : drop cell at index[%d][%d] to index[%d][%d]",cell->getCellIndex().rowPos,cell->getCellIndex().columnPos,index-count,column);
-                    }
-
-                    break;
-                }
-            }
-        }
-    }
+  
     
     void GameLayer::update(float dt)
     {
@@ -1122,6 +1165,7 @@ namespace Game
         if (_lastDeleteCell!=NULL && _lastDropCell!=NULL) {
             return;
         }
+        
         DeleteFNMap beDelMap = TODO_FindDeleteCells();
         if (beDelMap.empty()) {
             DeleteFNMap delmap;
@@ -1152,15 +1196,12 @@ namespace Game
         {
             //有下落过程时，所有cell禁止touch
             for (int col = 0; col<CELLNUM; col++) {
-                blocks[col].clear();
+                
                 for (int row = 0; row<CELLNUM; row++) {
                     Node *node1=this->getChildByTag(row*CELLNUM+col);
                     FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
                     if (cell1) {
                         cell1->_canTouch = false;
-                    }
-                    if (cellsStatus[row][col]==-1 || cellsStatus[row][col]==99 || cellsStatus[row][col]==100) {
-                        blocks[col].push_back(row);
                     }
                 }
                 dropCount[col].clear();
@@ -1175,17 +1216,16 @@ namespace Game
                 DeleteUnitListIterator listit = list.begin();
                 for (; listit!=list.end(); listit++) {
                     CellIndex temp = intToColRow(*listit);
-                    Node *node1=this->getChildByTag(temp.rowPos*CELLNUM+temp.columnPos);
-                    FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+                    FruntCell *cell1=getCellWithIndex(temp);
                     if (cell1) {
                         if (count==3) {
-                            cell1->joinCellAnimation(DeleteAnimation, cell1->getToCellIndex());
+                            cell1->joinCellAnimation(DeleteAnimation, cell1->getCellIndex(),cell1->getCellIndex());
                         }else
                             if (count>=4) {
                                 if (cell1->isCellIndexEqual(index, temp)) {
-                                    cell1->joinCellAnimation(LightAnimate, index);
+                                    cell1->joinCellAnimation(LightAnimate, index,cell1->getCellIndex());
                                 }else
-                                    cell1->joinCellAnimation(MoveAndDeleteAnimate, index);
+                                    cell1->joinCellAnimation(MoveAndDeleteAnimate, index,cell1->getCellIndex());
                             }
                         cellt = cell1;
                         dropCount[temp.columnPos].push_back(temp.rowPos);
@@ -1362,7 +1402,7 @@ namespace Game
     
     
     
-    FruntCell * GameLayer::createNewCell(int column,int row,bool isPlaying,int type, int rowcount,int status)
+    FruntCell * GameLayer::createNewCell(int column,int row,int type, int rowcount,int status)
     {
         FruntCell *_fs=FruntCell::create();
         double width=Director::getInstance()->getWinSize().width/rowcount;
@@ -1379,6 +1419,24 @@ namespace Game
         return _fs;
     }
     
+    FruntCell * GameLayer::createNewCell2(int column,int row,int tagcolumn,int tagrow, int rowcount)
+    {
+        FruntCell *_fs=FruntCell::create();
+        double width=Director::getInstance()->getWinSize().width/rowcount;
+        _fs->setContentSize(Size(width, width));
+        double _cloumnPos=width*(column%rowcount);
+        double _rowPos;
+        _rowPos=width*row;
+        _fs->setPosition(Vec2(_cloumnPos, _rowPos));
+        this->addChild(_fs);
+        
+        _fs->setNowIndex(tagrow, tagcolumn);
+        _fs->registDelegate(this);
+        cellsStatus[tagrow][tagcolumn]=3;
+        int temp=1+std::rand()%CELLNUM;
+        _fs->setType(temp);
+        return _fs;
+    }
     
     bool GameLayer::onTouchBegan(Touch *pTouch, Event *pEvent)
     {
@@ -1473,8 +1531,6 @@ namespace Game
         for (int i=0; i<CELLNUM; i++) {
             list<int> temp;
             dropCount[i] = temp;
-            list<int> temp2;
-            blocks[i] = temp2;
         }
         loadGameMap();
         return true;
@@ -1497,32 +1553,96 @@ namespace Game
     void GameLayer::loadGameMap()
     {
         
-        middlerDropCenter = CELLNUM/2+1;
         int temp[9][9] = {
-            {99, 99, 99, 99, 1, 99, 99,99,99},
-            {99, 99, 99,  6, 7,  1, 99,99,99},
-            {99, 99,  5,  6, 4,  2,  1,99,99},
-            {99,  4,  4,  4,  7,  2,  2, 1,99},
-            { 1,  1,100,  3,  100,  1,100, 4, 1},
-            {3,  1,  1,  1,  1,  1,  2, 1,7},
-            {4, 5,  1,  5,  1,  5,  1,3,4},
-            {3, 4, 5,  1,  2,  1, 3,4,5},
-            {3, 4, 5, 6,  1, 7, 3,4,5}
+            {99,   99,   99,   99,    1,   99,    99,   99,   99},
+            {99,   99,   99,    6,    7,    1,    99,   99,   99},
+            {99,   99,    5,    6,    4,    2,     1,   99,   99},
+            {99,    4,    4,    3,    4,    2,     2,    1,   99},
+            { 1,    1,  100,    3,  100,    1,   100,    4,    1},
+            { 3,    1,    2,    3,    1,    3,     2,    1,    7},
+            { 4,    5,    1,    5,    1,    5,     1,    4,    4},
+            { 3,    4,    5,    1,    2,    1,     3,    1,    5},
+            { 3,    4,    5,    6,    1,    7,     3,    4,    5}
         };
+        dropTump.push_back(colRowToInt(0, 8));
+        dropTump.push_back(colRowToInt(1, 8));
+        dropTump.push_back(colRowToInt(2, 8));
+        dropTump.push_back(colRowToInt(3, 8));
+        dropTump.push_back(colRowToInt(4, 8));
+        dropTump.push_back(colRowToInt(5, 8));
+        dropTump.push_back(colRowToInt(6, 8));
+        dropTump.push_back(colRowToInt(7, 8));
+        dropTump.push_back(colRowToInt(8, 8));
         //make CELLNUM*CELLNUM cells
         for (int column=0; column<CELLNUM; column++) {
             for (int row=0; row<CELLNUM; row++) {
                 if (temp[row][column]==-1) {
-                    createNewCell(column, CELLNUM-1 - row,false,temp[row][column],CELLNUM,-1);
+                    createNewCell(column, CELLNUM-1 - row,temp[row][column],CELLNUM,-1);
                 }else
                 if (temp[row][column]==99) {
-                    createNewCell(column, CELLNUM-1 - row,false,temp[row][column],CELLNUM,99);
+                    createNewCell(column, CELLNUM-1 - row,temp[row][column],CELLNUM,99);
                 }else
                     if (temp[row][column]==100) {
-                        createNewCell(column, CELLNUM-1 - row,false,temp[row][column],CELLNUM,100);
+                        createNewCell(column, CELLNUM-1 - row,temp[row][column],CELLNUM,100);
                     }else
-                        createNewCell(column, CELLNUM-1 - row,false,temp[row][column],CELLNUM,0);
+                        createNewCell(column, CELLNUM-1 - row,temp[row][column],CELLNUM,0);
             }
         }
     }
+    
+    
+    FruntCell * GameLayer::getCellWithIndex(CellIndex index)
+    {
+        if (cellsStatus[index.rowPos][index.columnPos]!=99 && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1) {
+            Node *node1=this->getChildByTag(index.rowPos*CELLNUM+index.columnPos);
+            FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+            return cell1;
+        }
+        return NULL;
+    }
+    
+    FruntCell * GameLayer::getKoCellWithIndex(CellIndex index)
+    {
+        if (cellsStatus[index.rowPos][index.columnPos]==99) {
+            Node *node1=this->getChildByTag(index.rowPos*CELLNUM+index.columnPos);
+            FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
+            return cell1;
+        }
+        return NULL;
+    }
+    
+    bool GameLayer::isNormalCellIndex(CellIndex index)
+    {
+        if (cellsStatus[index.rowPos][index.columnPos]!=99 && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1) {
+            return true;
+        }
+        return false;
+    }
+    
+    bool GameLayer::isKoCellIndex(CellIndex index)
+    {
+        if (cellsStatus[index.rowPos][index.columnPos]==99 || cellsStatus[index.rowPos][index.columnPos]==100 || cellsStatus[index.rowPos][index.columnPos]==-1) {
+            return true;
+        }
+        return false;
+    }
+    
+    bool GameLayer::isNormalCellIndexAndNullCell(CellIndex index)
+    {
+        if (cellsStatus[index.rowPos][index.columnPos]!=99 && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1 && !getCellWithIndex(index)) {
+            return true;
+        }
+        return false;
+    }
+    
+    bool GameLayer::isNormalCellIndexAndCell(CellIndex index)
+    {
+        if (cellsStatus[index.rowPos][index.columnPos]!=99 && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1 && getCellWithIndex(index)) {
+            return true;
+        }
+        return false;
+    }
+    
 }
+
+

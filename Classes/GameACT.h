@@ -83,16 +83,15 @@ namespace Game {
         
     private:
         
-        
-        int middlerDropCenter;
-        
+        list<long long> dropTump;
+        list<long long>::iterator dropTumpit;
 		Category *cy;
 		FruntCell *_lastDeleteCell;
         FruntCell *_lastDropCell;
         long long colRowToInt(int col,int row);
         CellIndex intToColRow(long long colrowint);
         long long colRowToInt2(int col,int row);
-        long long squareandbehand(int col1,int col2,int col3);
+        long long squareandbehand(int col1,int col2,long long col3);
         CellSquare benhandsquare(long long square);
         CellIndex preCanDeleteTargetCellIndex(long long colrowint);
         CellIndex preCanDeleteCurrentCellIndex(long long colrowint);
@@ -104,9 +103,11 @@ namespace Game {
         CellIndex _lastedClick2;
         
         list<int> dropCount[CELLNUM];
-        list<int> blocks[CELLNUM];
-//        void IIIIII(int map[][CELLNUM]);
+        
         void IIIIII();
+        void JJJJJJ();
+        bool KKKKKK(CellSquare square,int row);
+        FruntCell *DDDDDD(int fromcol,int tocol,long long dropcolrow);
         void loadGameMap();
         /*
          -1     NULL
@@ -120,7 +121,7 @@ namespace Game {
          100    k.o.//不可消除物
          */
         int cellsStatus[CELLNUM][CELLNUM];
-        int tempcellsStatus[CELLNUM][CELLNUM];
+        int addCount[CELLNUM];
         DeleteFNMap prefnmap;
         struct CmpByValue {
             bool operator()(const PAIR& lhs, const PAIR& rhs) {
@@ -131,7 +132,7 @@ namespace Game {
         DeleteFNMap TODO_FindDeleteCells();
         bool TODO_DeleteCell();
         bool TODO_ResetCell();
-        bool TODO_DropCell();
+        
         DeleteUnitList sortMapByRow(pair<DeleteUnitListIterator,DeleteUnitListIterator> Findpair,int column);
         void addNewCell(int addcount,int column);
         
@@ -143,7 +144,8 @@ namespace Game {
         void registTwoCell(CellIndex c1,CellIndex c2);
         void addNewCells(int column);
         //FruntCell * randNewCell(int columnPos,int rowPos,bool isPlaying);
-        FruntCell * createNewCell(int column,int row,bool isPlaying,int type ,int rowcount,int status);
+        FruntCell * createNewCell(int column,int row,int type ,int rowcount,int status);
+        FruntCell * createNewCell2(int column,int row,int tagcolumn,int tacolumn, int rowcount);
         ProgressTimer *progress;
         float dtf;
         void pop(Ref *node);
@@ -162,6 +164,16 @@ namespace Game {
         DeleteTotalUnitList findRowDelete2(string ss,int row,int row1,int col1,int row2,int col2);
         DeleteTotalUnitList findColDelete2(string ss,int column,int row1,int col1,int row2,int col2);
         string getCellTypeString(int row,int column);
+        
+        FruntCell *getCellWithIndex(CellIndex index);//正常cell
+        FruntCell *getKoCellWithIndex(CellIndex index);//无法移动的cell，除了－1
+        bool isNormalCellIndex(CellIndex index);//正常的可下落空间
+        bool isNormalCellIndexAndNullCell(CellIndex index);//正常的可下切cell是空
+        bool isNormalCellIndexAndCell(CellIndex index);//正常的可下落且cell非空
+        bool isKoCellIndex(CellIndex index);//非正常cell
+        QUJIANlist findQuJian();
+        QUJIANlist qujianlist;
+
     public:
         
         static Scene *createGameACTScene(void);
@@ -181,7 +193,7 @@ namespace Game {
         virtual void direction(MoveDirection dir,CellIndex lastedClick);
         
         virtual void willAnimate(Layer *cell);
-        virtual void exchanging(Layer *cell);
+        virtual void moving(Layer *cell);
         virtual void deleteing(Layer *cell);
         virtual void droping(Layer *cell);
         

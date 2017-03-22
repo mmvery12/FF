@@ -26,6 +26,7 @@ namespace Game {
         typedef struct {
             AnimationType animationtype;
             CellIndex toIndex;
+            CellIndex preIndex;
         }AnimationStruct;
         
         typedef list<AnimationStruct> AnimationList;
@@ -37,9 +38,7 @@ namespace Game {
         bool _isMoving;
         
         Sprite *fruntSp;
-        CellIndex _index;
-        CellIndex _movingIndex;
-        CellIndex _tempIndex;
+        
         void spheightLight();
         void spNormal();
         void spDestory();
@@ -56,17 +55,18 @@ namespace Game {
         bool _leftH;
         bool _rightH;
         bool _bottomH;
-        CellIndex toIndex;
+        
+        CellIndex previseIndex;
         CellIndex nowIndex;
         //
         
         void showAnimation();
-        void movingAnimation(CellIndex temp);
-        void movingAnimation2(CellIndex temp);
-        void deleteAnimation(CellIndex temp);
-        void dropAnimation(CellIndex temp);
-        void moveAndDeleteAnimate(CellIndex temp);
-        void lightAnimatimate(CellIndex temp);
+        void movingAnimation(AnimationStruct animate);
+        void movingAnimation2(AnimationStruct animate);
+        void deleteAnimation(AnimationStruct animate);
+        void dropAnimation(AnimationStruct animate);
+        void moveAndDeleteAnimate(AnimationStruct animate);
+        void lightAnimatimate(AnimationStruct animate);
         void movingAnimationComplete();
         void movingAnimationComplete2();
         void deleteAnimationComplete();
@@ -74,7 +74,7 @@ namespace Game {
         void moveAndDeleteAnimateComplete();
         void lightAnimatimateComplete();
         void exchangeIndex();
-        
+        void exchangeIndex(CellIndex index);
         
         AnimationList animationList;
         AnimationIterator animationIterator;
@@ -84,11 +84,13 @@ namespace Game {
         //new
         bool isCellIndexEqual(CellIndex cell1,CellIndex cell2);
         void setNowIndex(int row,int column);
-        void joinCellAnimation(AnimationType type, CellIndex moveTo);
+        void joinCellAnimation(AnimationType type, CellIndex moveTo,CellIndex from);
         
         CellIndex getCellIndex();
-        CellIndex getToCellIndex();
-        CellIndex getAnimationToIndex();
+        CellIndex getPreviseCellIndex();//cell上个状态的index
+        
+        
+        
         
 //        virtual void update(float delta);
         

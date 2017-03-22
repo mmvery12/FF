@@ -23,7 +23,7 @@ public:
     
     virtual void willAnimate(Layer *cell)=0;
     
-    virtual void exchanging(Layer *cell)=0;
+    virtual void moving(Layer *cell)=0;
     virtual void movingComplete(Layer *cell)=0;
     virtual void movingComplete2(Layer *cell)=0;
     

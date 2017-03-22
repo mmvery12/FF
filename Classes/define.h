@@ -27,3 +27,5 @@ typedef DeleteFNMap::const_iterator DeleteFNMapIterator;
 
 typedef  DeleteFNMap DropFNMap;
 typedef DeleteFNMapIterator DropFNMapIterator;
+
+typedef list<long long> QUJIANlist;

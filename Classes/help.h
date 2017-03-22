@@ -26,15 +26,15 @@ enum CellStatus
 
 struct CellIndex
 {
-    int columnPos;
     int rowPos;
+    int columnPos;
 };
 
 struct CellSquare
 {
     int columnPos1;//zuo
     int columnPos2;//you
-    int columnPos3;//xialuocell
+    long long columnPos3;//xialuocell
 };
 
 enum AnimationType {
