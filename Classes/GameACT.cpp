@@ -10,18 +10,6 @@
 
 namespace Game
 {
-    void int2str(const long long  &int_temp,string &string_temp)
-    {
-        stringstream stream;
-        stream<<int_temp;
-        string_temp=stream.str();
-    }
-    
-    void str2int(long long  &int_temp,const string &string_temp)
-    {
-        stringstream stream(string_temp);
-        stream>>int_temp;
-    }
     //当前index
     long long GameLayer::colRowToInt(int col,int row)
     {
@@ -127,12 +115,9 @@ namespace Game
                     int ff=i;
                     for (int column=0; column<count; column++) {
                         ff--;
-//                        Node *node=this->getChildByTag(row*CELLNUM+ff);
-//                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         FruntCell *cell = getCellWithIndex({row,ff});
                         if (cell){
                             unitlist.push_back(colRowToInt(ff, row));
-                            log("---> GameLayer : destory cell [%d][%d] findRowDelete",row,ff);
                         }
                     }
                     totalunitlist.push_back(unitlist);
@@ -162,23 +147,16 @@ namespace Game
                     count++;
                     int ff=i;
                     for (int column=0; column<count; column++) {
-                        
                         ff--;
-//                        Node *node=this->getChildByTag(row*CELLNUM+ff);
-//                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         FruntCell *cell = getCellWithIndex({row,ff});
                         if (cell){
                             if (row1==row && col1==ff) {
                                 delmap.push_back(colRowToInt(col2, row2));
-                                //delmap.insert(pair<int, int>(col2, row2));
                             }else
                             if (row2==row&& col2==ff) {
                                 delmap.push_back(colRowToInt(col1, row1));
-                                //delmap.insert(pair<int, int>(col1,row1));
                             }else
                                 delmap.push_back(colRowToInt(ff, row));
-                                //delmap.insert(pair<int, int>(ff,row));
-                            log("---> GameLayer : destory cell [%d][%d] findRowDelete",row,ff);
                         }
                     }
                     dellist.push_back(delmap);
@@ -209,20 +187,15 @@ namespace Game
                     int ff=i;
                     for (int row=0; row<count; row++) {
                         ff--;
-//                        Node *node=this->getChildByTag(ff*CELLNUM+column);
-//                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         FruntCell *cell = getCellWithIndex({ff,column});
                         if (cell) {
                             if (row1==ff && col1==column) {
                                 delmap.push_back(colRowToInt(col2, row2));
-                                //delmap.insert(pair<int, int>(col2, row2));
                             }else
                                 if (row2==ff&& col2==column) {
                                     delmap.push_back(colRowToInt(col1, row1));
-                                    //delmap.insert(pair<int, int>(col1,row1));
                                 }else
                                     delmap.push_back(colRowToInt(column, ff));
-                                    //delmap.insert(pair<int, int>(column,ff));
                         }
                     }
                     dellist.push_back(delmap);
@@ -254,13 +227,9 @@ namespace Game
                     int ff=i;
                     for (int row=0; row<count; row++) {
                         ff--;
-//                        Node *node=this->getChildByTag(ff*CELLNUM+column);
-//                        FruntCell *cell=dynamic_cast<FruntCell *>(node);
                         FruntCell *cell = getCellWithIndex({ff,column});
                         if (cell) {
                             delmap.push_back(colRowToInt(column, ff));
-                            //delmap.insert(pair<int, int>(column,ff));
-                            log("---> GameLayer : destory cell [%d][%d] findColDelete",ff,column);
                         }
                     }
                     dellist.push_back(delmap);
@@ -274,17 +243,13 @@ namespace Game
     
     string GameLayer::getCellTypeString(int row,int column)
     {
-        Node *node=this->getChildByTag(row*CELLNUM+column);
-        FruntCell *cell=dynamic_cast<FruntCell *>(node);
+        FruntCell *cell=getCellWithIndex({row,column});
         char temps[2]="";
-        
-        if (this->cellsStatus[row][column]!=0||
-            node==NULL) {
+        if (!cell) {
             std::sprintf(temps, "_");
         }else
             std::sprintf(temps, "%u",cell->cellType);
         std::string sg(temps);
-        
         return sg;
     }
     
@@ -387,7 +352,7 @@ namespace Game
                     temp.sort();
                     DeleteUnitList samemergeunit2 = temp;
                     temp.unique();
-                    if (temp.size()!=rowunit2.size()+colunit2.size()) {//有重复元素
+                    if (temp.size()!=rowunit.size()+colunit.size()) {//有重复元素
                         samemergeunit = temp;
                         //下面通过map计数找出重复的cell的int表述
                         map<int,int> kkk;
@@ -487,7 +452,7 @@ namespace Game
     
     void GameLayer::clickAtInde(CellIndex index)
     {
-        if (cellsStatus[index.rowPos][index.columnPos]!=0) {
+        if (isKoCellIndex(index) && !getCellWithIndex(index)) {
             return;
         }
         CCLOG("---> GameLayer : click at index column=%d row=%d tag=%d\r\n",index.columnPos,index.rowPos,index.rowPos*CELLNUM+index.columnPos);
@@ -726,33 +691,292 @@ namespace Game
         return qujianlist;
     }
     
-//    void GameLayer::IIIIII(int tempcellsStatus2xxx[][CELLNUM])
+
     void GameLayer::IIIIII()
     {
-        //尝试可左右移动到＝5的cell
-        bool hascehua = false;
-        {
-            for (int row = 0; row<CELLNUM; row++) {
-                JJJJJJ();//垂直下落
-                list<long long>::iterator chuizhiqujianlistit = qujianlist.begin();
-                for (; chuizhiqujianlistit!=qujianlist.end(); chuizhiqujianlistit++) {
-                    CellSquare square = benhandsquare(*chuizhiqujianlistit);
-                    
-                    DDDDDD(square.columnPos1, square.columnPos2, 0);//递归填坑
-                    if (KKKKKK(square, row)) {//侧滑填坑
-                        IIIIII();
+        
+        for (int i=0; i<CELLNUM; i++) {
+            addCount[i] = 1;
+        }
+        /////////////
+        bool flag = false;
+        do {
+            flag = false;
+            FruntCell *cell;
+            for (int row=0; row<CELLNUM; row++) {
+                for (int col=CELLNUM-1; col>=0; col--) {
+                    if (row==5 && col==7) {
+                        
                     }
-                    for (int i=0; i<CELLNUM; i++) {
-                        addCount[i] = 1;
+                    
+                    long long tag = colRowToInt(col, row);
+                    if (isNormalCellIndexAndNullCell({row,col}) && isNormalCellIndex({row,col}) && row==CELLNUM-1) {
+                        dropTumpit = dropTump.begin();
+                        for (; dropTumpit!=dropTump.end(); dropTumpit++) {
+                            long long temp = *dropTumpit;
+                            if (temp==tag) {
+                                tag = true;
+                                break;
+                            }
+                        }
+                        if (flag) {
+                            
+                            cell = createNewCell2(col, (int)addCount[col]+row, col, row, CELLNUM);
+                            CellIndex tempindex;
+                            tempindex.columnPos = col;
+                            tempindex.rowPos = row;
+                            cell->joinCellAnimation(DropAnimation, tempindex,{(int)addCount[col]+row,col});
+                            addCount[col] = addCount[col]+1;
+                            log("row %d col %d to create",row,col);
+                        }
+                        
+                    }
+                    
+                    
+                    if (isNormalCellIndexAndCell({row,col})) {
+                        bool downIsNull = false;
+                        bool downIsCell = false;
+                        bool downIsKo = false;
+                        if (row!=0) {
+                            downIsNull = isNormalCellIndexAndNullCell({row-1,col});
+                            downIsCell = isNormalCellIndexAndCell({row-1,col});
+                            downIsKo = isKoCellIndex({row-1,col});
+                        }
+                        
+                    
+                        bool downLeftIsNull = false;
+                        bool downRightIsNUll = false;
+                        bool leftIsKo = false;
+                        bool rightIsKo = false;
+                        
+                        
+                        if (col!=0 && row!=0 &&
+                            isNormalCellIndexAndNullCell({row-1,col+1})) {
+                            downRightIsNUll = true;
+                        }
+                        if (downRightIsNUll && isKoCellIndex({row,col+1})) {
+                            for (int i=row; i<CELLNUM ; i++) {
+                                for (int j=col; j>=0; j--) {
+                                    if (isKoCellIndex({i,j+1}) && isNormalCellIndex({i,j})) {
+                                        rightIsKo = true;
+                                        
+                                        break;
+                                    }
+                                }
+                                
+                                for (int k=i; k>row; k--) {
+                                    if (isKoCellIndex({k,col})) {
+                                        break;
+                                    }
+                                    if (isNormalCellIndexAndNullCell({k,col})) {
+                                        continue;
+                                    }
+                                    if (isNormalCellIndexAndCell({k,col})) {
+                                        rightIsKo = false;
+                                        break;
+                                    }
+                                }
+                                if (rightIsKo) {
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        
+                        if (col!=0 && row!=0 &&
+                            isNormalCellIndexAndNullCell({row-1,col-1})) {
+                            downLeftIsNull = true;
+                        }
+                        if (downLeftIsNull && isKoCellIndex({row,col-1})) {
+                            for (int i=row; i<CELLNUM; i++) {
+                                for (int j=col; j<CELLNUM; j++) {
+                                    if (isKoCellIndex({i,j-1}) && isNormalCellIndex({i,j})) {
+                                        leftIsKo = true;
+                                        break;
+                                    }
+                                }
+                                
+                                for (int k=i; k>row; k--) {
+                                    if (isKoCellIndex({k,col})) {
+                                        break;
+                                    }
+                                    if (isNormalCellIndexAndNullCell({k,col})) {
+                                        continue;
+                                    }
+                                    if (isNormalCellIndexAndCell({k,col})) {
+                                        leftIsKo = false;
+                                        break;
+                                    }
+                                }
+                                if (leftIsKo) {
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        
+                        cell = getCellWithIndex({row,col});
+                        if (downIsNull) {
+                            flag = true;
+                            cell->joinCellAnimation(DropAnimation, {row-1,col}, cell->getCellIndex());
+                            log("row %d col %d to down",row,col);
+                        }else
+                        if ((downIsCell || downIsKo) && downLeftIsNull && leftIsKo) {
+                            flag = true;
+                            cell->joinCellAnimation(DropAnimation, {row-1,col-1}, cell->getCellIndex());
+                            log("row %d col %d to lef",row,col);
+                        }else
+                        if ((downIsCell || downIsKo) && downRightIsNUll && rightIsKo) {
+                            flag = true;
+                            log("row %d col %d to right",row,col);
+                            cell->joinCellAnimation(DropAnimation, {row-1,col+1}, cell->getCellIndex());
+                        }
+                    }
+                }
+            }
+            
+            
+            if (cell) {
+                _lastDropCell = cell;
+            }
+        } while (flag);
+        
+        return;
+        /////////////
+        list<long long>::iterator chuizhiqujianlistit = qujianlist.begin();
+        for (; chuizhiqujianlistit!=qujianlist.end(); chuizhiqujianlistit++) {
+            CellSquare square = benhandsquare(*chuizhiqujianlistit);
+            DDDDDD(square.columnPos1, square.columnPos2, 0);//递归填坑
+        }
+        chuizhiqujianlistit = qujianlist.begin();
+        for (; chuizhiqujianlistit!=qujianlist.end(); chuizhiqujianlistit++) {
+            CellSquare square = benhandsquare(*chuizhiqujianlistit);
+            DDDDDD(square.columnPos1, square.columnPos2, 0);//递归填坑
+        }
+    }
+    
+    
+    
+    
+    FruntCell *GameLayer::DDDDDD(int fromcol,int endcol,long long dropcolrow)
+    {
+        JJJJJJ();
+        CellIndex returnColrow = {-1,-1};
+        if (dropcolrow!=0) {
+            returnColrow = intToColRow(dropcolrow);
+        }
+        //
+        //发现有可侧滑时，通过当前是左往右，还是右往左来拉可侧滑口左侧或右侧的cell
+        //
+        
+        if (fromcol>endcol) {//向右扫描f:4 e:0
+            for (int col=endcol; col<=fromcol; col++) {
+                
+                long long currenttopreturncolrow = 0;//当前col的最高位下落口
+                for (int row=0; row<CELLNUM; row++) {
+                    if (isNormalCellIndex({row,col}) &&
+                        isNormalCellIndex({row+1,col+1})) {
+                        currenttopreturncolrow = colRowToInt(col+1,row+1);
+                    }
+                }
+                
+                CellIndex topIndex = intToColRow(currenttopreturncolrow);
+                topIndex.rowPos = topIndex.rowPos-1;
+                
+                for (int row=0; row<CELLNUM; row++) {
+                    FruntCell *cell;
+                    
+                    bool zhongjianyoumeiyouzhedang = false;
+                    for (int i=row; i<CELLNUM; i++) {
+                        if (isKoCellIndex({i,fromcol})) {
+                            zhongjianyoumeiyouzhedang = true;
+                            break;
+                        }
+                    }
+                    
+                    if (isNormalCellIndexAndNullCell({row,col}) &&
+                        row<=topIndex.rowPos && col!=fromcol && zhongjianyoumeiyouzhedang) {
+                        cell = DDDDDD(fromcol, col+1, currenttopreturncolrow);
+                        if (cell) {
+                            cell->joinCellAnimation(DropAnimation, {row,col}, cell->getCellIndex());
+                        }
+                    }
+                    
+                    if (row==returnColrow.rowPos && returnColrow.rowPos!=-1) {
+                        return cell;
                     }
                 }
             }
         }
+        if (fromcol<endcol) {//想左扫描 f:4 e:8
+            for (int col = endcol; col>=fromcol; col--) {
+                
+                long long currenttopreturncolrow = 0;
+                for (int row=0; row<CELLNUM; row++) {
+                    if (isNormalCellIndex({row,col}) &&
+                        isNormalCellIndex({row+1,col-1})) {
+                        currenttopreturncolrow = colRowToInt(col-1,row+1);
+                    }
+                }
+                
+                CellIndex topIndex = intToColRow(currenttopreturncolrow);
+                topIndex.rowPos = topIndex.rowPos-1;
+                
+                for (int row=0; row<CELLNUM; row++) {
+                    FruntCell *cell;
+                    bool zhongjianyoumeiyouzhedang = false;
+                    for (int i=row; i<CELLNUM; i++) {
+                        if (isKoCellIndex({i,fromcol})) {
+                            zhongjianyoumeiyouzhedang = true;
+                            break;
+                        }
+                    }
+                    if (isNormalCellIndexAndNullCell({row,col}) &&
+                        row<=topIndex.rowPos && col!=fromcol && zhongjianyoumeiyouzhedang) {
+                        cell = DDDDDD(fromcol, col-1, currenttopreturncolrow);
+                        if (cell) {
+                            cell->joinCellAnimation(DropAnimation, {row,col}, cell->getCellIndex());
+                        }
+                    }
+                    
+                    if (row==returnColrow.rowPos && returnColrow.rowPos!=-1) {
+                        return cell;
+                    }
+                }
+                
+            }
+        }
         
+        for (int row = 0; row<CELLNUM; row++) {
+            
+            FruntCell *cell = getCellWithIndex({row,fromcol});
+            bool zhongjianyoumeiyouzhedang = false;
+            for (int i=row; i<CELLNUM; i++) {
+                if (isKoCellIndex({i,fromcol})) {
+                    zhongjianyoumeiyouzhedang = true;
+                    break;
+                }
+            }
+            if (isNormalCellIndexAndNullCell({row,endcol}) && zhongjianyoumeiyouzhedang) {
+                cell = createNewCell2(endcol, (int)addCount[endcol]+row, endcol, row, CELLNUM);
+                CellIndex tempindex;
+                tempindex.columnPos = endcol;
+                tempindex.rowPos = row;
+                cell->joinCellAnimation(DropAnimation, tempindex,{(int)addCount[endcol]+row,endcol});
+                addCount[endcol]=addCount[endcol]+1;
+                _lastDropCell = cell;
+            }
+            if (cell && row==returnColrow.rowPos) {
+                return cell;
+            }
+        }
+        return _lastDropCell;
     }
     
+    /*
     FruntCell *GameLayer::DDDDDD(int fromcol,int endcol,long long dropcolrow)
     {
+        JJJJJJ();
         CellIndex returnColrow = {-1,-1};
         if (dropcolrow!=0) {
             returnColrow = intToColRow(dropcolrow);
@@ -764,12 +988,34 @@ namespace Game
             for (int row = 0; row<CELLNUM; row++) {
                 
                 bool zhongjianyoumeiyouzhedang = false;
+                long long koindexcolrow;
                 for (int i=row; i<CELLNUM; i++) {
                     if (isKoCellIndex({i,fromcol})) {
                         zhongjianyoumeiyouzhedang = true;
+                        koindexcolrow = colRowToInt(fromcol, i);
+                        break;
                     }
                 }
+                CellIndex cehuaindex = intToColRow(koindexcolrow);
                 FruntCell *cell = getCellWithIndex({row,fromcol});
+                //todo 发现可侧滑
+                
+                if (isNormalCellIndexAndNullCell({row,endcol})&&
+                    zhongjianyoumeiyouzhedang)
+                {
+                    if (isNormalCellIndex({cehuaindex.rowPos,cehuaindex.columnPos+1})) {
+                        cell = getCellWithIndex({cehuaindex.rowPos,cehuaindex.columnPos+1});
+                    }else
+                    if (isNormalCellIndex({cehuaindex.rowPos,cehuaindex.columnPos-1}) ){
+                        cell = getCellWithIndex({cehuaindex.rowPos,cehuaindex.columnPos-1});
+                    }
+                    if (cell) {
+                        cell->joinCellAnimation(DropAnimation, {row,fromcol}, cell->getCellIndex());
+                        JJJJJJ();
+                    }
+                    
+                }else
+                 
                 if (isNormalCellIndexAndNullCell({row,endcol})&&
                     !zhongjianyoumeiyouzhedang) {
                     cell = createNewCell2(endcol, (int)addCount[endcol]+row, endcol, row, CELLNUM);
@@ -786,8 +1032,8 @@ namespace Game
             }
             return _lastDropCell;
         }
-        if (fromcol>endcol) {
-            for (int col=endcol; col<fromcol; col++) {
+        if (fromcol>endcol) {//向右扫描f:4 e:0
+            for (int col=endcol; col<=fromcol; col++) {
                 
                 long long currenttopreturncolrow = 0;
                 for (int row=0; row<CELLNUM; row++) {
@@ -799,65 +1045,87 @@ namespace Game
                 
                 CellIndex topIndex = intToColRow(currenttopreturncolrow);
                 topIndex.rowPos = topIndex.rowPos-1;
+                long long koindexcolrow;
                 for (int row=0; row<CELLNUM; row++) {
                     bool zhongjianyoumeiyouzhedang = false;
                     for (int i=row; i<topIndex.rowPos; i++) {
                         if (isKoCellIndex({i,col})) {
                             zhongjianyoumeiyouzhedang = true;
+                            koindexcolrow = colRowToInt(col+1, i);
+                            break;
                         }
                     }
+                    CellIndex cehuaindex = intToColRow(koindexcolrow);
                     FruntCell *cell = getCellWithIndex({row,col});
-                    if (cell==NULL && isNormalCellIndexAndNullCell({row,col}) && !zhongjianyoumeiyouzhedang && row<=topIndex.rowPos) {
-                        cell = DDDDDD(fromcol, col+1, currenttopreturncolrow);
-                        if (cell==NULL) {
-                            
+                    //todo 发现可侧滑
+                    if (cell==NULL && zhongjianyoumeiyouzhedang
+                        && isNormalCellIndexAndNullCell({row,col})
+                        && isNormalCellIndex({cehuaindex.rowPos,cehuaindex.columnPos})
+                        && row<=topIndex.rowPos) {
+                        if (col==fromcol) {
+                            cell = getCellWithIndex({cehuaindex.rowPos,col-1});
+                        }else
+                            cell = DDDDDD(fromcol, col+1, koindexcolrow);
+                        if (cell) {
+                            cell->joinCellAnimation(DropAnimation, {row,col}, cell->getCellIndex());
+                            JJJJJJ();
                         }
+                    }else
+                    if (cell==NULL && isNormalCellIndexAndNullCell({row,col}) && !zhongjianyoumeiyouzhedang && row<=topIndex.rowPos && col!=fromcol) {
+                        cell = DDDDDD(fromcol, col+1, currenttopreturncolrow);
                         cell->joinCellAnimation(DropAnimation, {row,col}, cell->getCellIndex());
                     }
                     if (row==returnColrow.rowPos && returnColrow.rowPos!=-1) {
-                        if (cell==NULL) {
-                            
-                        }
                         return cell;
                     }
                 }
-                
-                
-                
             }
         }
-        if (fromcol<endcol) {
-            for (int col = endcol; col>fromcol; col--) {
+        if (fromcol<endcol) {//想左扫描 f:4 e:8
+            for (int col = endcol; col>=fromcol; col--) {
 
                 long long currenttopreturncolrow = 0;
                 for (int row=0; row<CELLNUM; row++) {
-                    if (isNormalCellIndexAndNullCell({row,col}) &&
+                    if (isNormalCellIndex({row,col}) &&
                         isNormalCellIndex({row+1,col-1})) {
                         currenttopreturncolrow = colRowToInt(col-1,row+1);
                     }
                 }
+                
                 CellIndex topIndex = intToColRow(currenttopreturncolrow);
                 topIndex.rowPos = topIndex.rowPos-1;
+                long long koindexcolrow;
                 for (int row=0; row<CELLNUM; row++) {
                     bool zhongjianyoumeiyouzhedang = false;
                     for (int i=row; i<topIndex.rowPos; i++) {
                         if (isKoCellIndex({i,col})) {
                             zhongjianyoumeiyouzhedang = true;
+                            koindexcolrow = colRowToInt(col-1, i);
+                            break;
                         }
                     }
-                    
+                    CellIndex cehuaindex = intToColRow(koindexcolrow);
                     FruntCell *cell = getCellWithIndex({row,col});
-                    if (cell==NULL && isNormalCellIndexAndNullCell({row,col}) && !zhongjianyoumeiyouzhedang&& row<=topIndex.rowPos) {
-                        cell = DDDDDD(fromcol, col-1, currenttopreturncolrow);
-                        if (cell==NULL) {
-                            
+                    //todo 发现可侧滑
+                    if (cell==NULL && zhongjianyoumeiyouzhedang
+                        && isNormalCellIndexAndNullCell({row,col})
+                        && isNormalCellIndex({cehuaindex.rowPos,cehuaindex.columnPos})
+                        && row<=topIndex.rowPos ) {
+                        if (col==fromcol) {
+                            cell = getCellWithIndex({cehuaindex.rowPos,col+1});
+                        }else
+                            cell = DDDDDD(fromcol, col-1, koindexcolrow);
+                        if (cell) {
+                            cell->joinCellAnimation(DropAnimation, {row,col}, cell->getCellIndex());
+                            JJJJJJ();
                         }
+                        
+                    }else
+                    if (cell==NULL && isNormalCellIndexAndNullCell({row,col}) && !zhongjianyoumeiyouzhedang&& row<=topIndex.rowPos && col!=fromcol) {
+                        cell = DDDDDD(fromcol, col-1, currenttopreturncolrow);
                         cell->joinCellAnimation(DropAnimation, {row,col}, cell->getCellIndex());
                     }
                     if (row==returnColrow.rowPos && returnColrow.rowPos!=-1) {
-                        if (cell==NULL) {
-                            
-                        }
                         return cell;
                     }
                 }
@@ -867,13 +1135,17 @@ namespace Game
 
         return  NULL;
     }
-    
+    */
+     
     void GameLayer::JJJJJJ()
     {
         //重置dropCount中每列的空缺cell数量
         for (int j=0; j<CELLNUM; j++) {
             dropCount[j].clear();
             for (int i = 0; i<CELLNUM; i++) {
+                if (isKoCellIndex({i,j})) {
+                    continue;
+                }
                 if (isNormalCellIndexAndNullCell({i,j})) {
                     dropCount[j].push_back(i);
                 }
@@ -888,14 +1160,13 @@ namespace Game
             map<long long ,int> temodropmap;
             int ddcount = 0;
             for (int row = 0; row<CELLNUM; row++) {
-                FruntCell *cell1=getCellWithIndex({row,col});
-                if (cell1 && ddcount>0){//正常cell,切可下落个数不为空
+                if (getCellWithIndex({row,col}) && ddcount>0){//正常cell,切可下落个数不为空
                     temodropmap.insert(pair<long long, int>(colRowToInt(col, row),ddcount));
                 }
                 if (isNormalCellIndexAndNullCell({row,col})) {//遇到可下落点，可下落书＋＋
                     ddcount++;
                 }
-                if (!isNormalCellIndex({row,col})) {//当遇到阻碍物时，重置加入flag
+                if (isKoCellIndex({row,col})) {//当遇到阻碍物时，重置加入flag
                     ddcount=0;
                 }
             }
@@ -1012,13 +1283,13 @@ namespace Game
     void GameLayer::timeCallBack()
     {
 //        TODO_ResetCell();
-        if (_isMoving.empty() && _isDropping.empty() && _isDeleteing.empty() && _isMoveAndDeleteing.empty()) {
+        if (_isMoving.empty() && _isDropping.empty() && _isDeleteing.empty() && _isMoveAndDeleteing.empty() && _islighting.empty()) {
             findCurrent();
         }
     }
 
     
-    
+    /*
     bool GameLayer::TODO_DeleteCell()
     {
         DeleteFNMap delmap=TODO_FindDeleteCells();
@@ -1062,7 +1333,8 @@ namespace Game
         }
         return true;
     }
-    
+     */
+    /*
     bool GameLayer::TODO_ResetCell()
     {
         
@@ -1088,7 +1360,7 @@ namespace Game
         return true;
     }
 
-    
+    */
     void GameLayer::showTag()
     {
         for (int row=0; row<CELLNUM; row++) {
@@ -1345,7 +1617,7 @@ namespace Game
                     temp.sort();
                     DeleteUnitList samemergeunit2 = temp;
                     temp.unique();
-                    if (temp.size()!=rowunit2.size()+colunit2.size()) {//有重复元素
+                    if (temp.size()!=rowunit.size()+colunit.size()) {//有重复元素
                         samemergeunit = temp;
                         //下面通过map计数找出重复的cell的int表述
                         map<long long,long long> kkk;
@@ -1552,17 +1824,16 @@ namespace Game
     
     void GameLayer::loadGameMap()
     {
-        
         int temp[9][9] = {
-            {99,   99,   99,   99,    1,   99,    99,   99,   99},
-            {99,   99,   99,    6,    7,    1,    99,   99,   99},
-            {99,   99,    5,    6,    4,    2,     1,   99,   99},
-            {99,    4,    4,    3,    4,    2,     2,    1,   99},
-            { 1,    1,  100,    3,  100,    1,   100,    4,    1},
-            { 3,    1,    2,    3,    1,    3,     2,    1,    7},
-            { 4,    5,    1,    5,    1,    5,     1,    4,    4},
-            { 3,    4,    5,    1,    2,    1,     3,    1,    5},
-            { 3,    4,    5,    6,    1,    7,     3,    4,    5}
+            {99,    1,   99,    1,    99,    1,    99,    1,   99},
+            { 1,   99,    1,   99,     1,   99,     1,   99,    1},
+            {99,    1,   99,    1,    99,    1,    99,    1,   99},
+            {99,    4,    4,    3,     4,    2,     1,    2,   99},
+            { 1,    1,    2,    4,     3,    5,     6,    4,    1},
+            { 3,    1,    2,    3,     1,    3,     2,    1,    7},
+            { 4,    5,    1,    5,     1,    5,     3,    4,    4},
+            { 3,    4,    5,    1,     1,    1,     3,    1,    5},
+            { 3,    4,    5,    6,     1,    7,     3,    4,    5}
         };
         dropTump.push_back(colRowToInt(0, 8));
         dropTump.push_back(colRowToInt(1, 8));

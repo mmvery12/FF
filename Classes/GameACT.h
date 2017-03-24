@@ -130,8 +130,8 @@ namespace Game {
         };
         
         DeleteFNMap TODO_FindDeleteCells();
-        bool TODO_DeleteCell();
-        bool TODO_ResetCell();
+        //bool TODO_DeleteCell();
+        //bool TODO_ResetCell();
         
         DeleteUnitList sortMapByRow(pair<DeleteUnitListIterator,DeleteUnitListIterator> Findpair,int column);
         void addNewCell(int addcount,int column);

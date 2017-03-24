@@ -109,7 +109,7 @@ namespace Game {
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
-        FiniteTimeAction *act2=MoveTo::create(3, Vec2(cloumnPos, rowPos));
+        FiniteTimeAction *act2=MoveTo::create(1, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::movingAnimationComplete, this));
         Sequence *actList=Sequence::create(act2,act3,NULL);
         stopAllActions();
@@ -127,7 +127,7 @@ namespace Game {
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
-        FiniteTimeAction *act2=MoveTo::create(3, Vec2(cloumnPos, rowPos));
+        FiniteTimeAction *act2=MoveTo::create(1, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::movingAnimationComplete2, this));
         Sequence *actList=Sequence::create(act2,act3,NULL);
         stopAllActions();
@@ -203,7 +203,7 @@ namespace Game {
         double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
         
-        FiniteTimeAction *act2=MoveTo::create(3, Vec2(cloumnPos, rowPos));
+        FiniteTimeAction *act2=MoveTo::create(1, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::lightAnimatimateComplete, this));
         Sequence *actList=Sequence::create(act2,act3,NULL);
         stopAllActions();
