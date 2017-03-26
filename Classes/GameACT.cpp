@@ -700,17 +700,16 @@ namespace Game
         }
         /////////////
         bool flag = false;
+        int ff = 1;
         do {
             flag = false;
             FruntCell *cell;
             for (int row=0; row<CELLNUM; row++) {
-                for (int col=CELLNUM-1; col>=0; col--) {
-                    if (row==5 && col==7) {
-                        
-                    }
-                    
-                    long long tag = colRowToInt(col, row);
-                    if (isNormalCellIndexAndNullCell({row,col}) && isNormalCellIndex({row,col}) && row==CELLNUM-1) {
+                for (int col=0; col<CELLNUM; col++) {
+
+
+                    if (isNormalCellIndexAndNullCell({row,col}) && isNormalCellIndex({row,col}) && row==CELLNUM-1) {//最顶层下落点没有cell，即添加cell
+                        long long tag = colRowToInt(col, row);
                         dropTumpit = dropTump.begin();
                         for (; dropTumpit!=dropTump.end(); dropTumpit++) {
                             long long temp = *dropTumpit;
@@ -719,7 +718,7 @@ namespace Game
                                 break;
                             }
                         }
-                        if (flag) {
+                        if (tag) {
                             
                             cell = createNewCell2(col, (int)addCount[col]+row, col, row, CELLNUM);
                             CellIndex tempindex;
@@ -733,7 +732,7 @@ namespace Game
                     }
                     
                     
-                    if (isNormalCellIndexAndCell({row,col})) {
+                    if (isNormalCellIndexAndCell({row,col})) {//有cell则判断左右或直接下落
                         bool downIsNull = false;
                         bool downIsCell = false;
                         bool downIsKo = false;
@@ -838,6 +837,10 @@ namespace Game
             
             if (cell) {
                 _lastDropCell = cell;
+            }
+            if (flag==false && ff == 1) {
+                flag =true;
+                ff++;
             }
         } while (flag);
         
@@ -1830,9 +1833,9 @@ namespace Game
             {99,    1,   99,    1,    99,    1,    99,    1,   99},
             {99,    4,    4,    3,     4,    2,     1,    2,   99},
             { 1,    1,    2,    4,     3,    5,     6,    4,    1},
-            { 3,    1,    2,    3,     1,    3,     2,    1,    7},
+            { 3,    1,    2,    3,     2,    3,     2,    1,    7},
             { 4,    5,    1,    5,     1,    5,     3,    4,    4},
-            { 3,    4,    5,    1,     1,    1,     3,    1,    5},
+            { 3,    4,    5,    2,     1,    2,     2,    1,    5},
             { 3,    4,    5,    6,     1,    7,     3,    4,    5}
         };
         dropTump.push_back(colRowToInt(0, 8));

@@ -36,6 +36,7 @@ namespace Game {
         animationStruct.animationtype=type;
         animationStruct.toIndex=moveTo;
         animationStruct.preIndex = from;
+        
         animationList.push_back(animationStruct);
         if (animationList.size()>1) {
             CCLOG("***************** WARM *****************");
