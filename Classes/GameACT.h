@@ -34,6 +34,9 @@ using namespace cocos2d;
 using std::string;
 using namespace std;
 
+#define CDestoryKO 9781
+#define CNDestoryKO 9782
+#define WhiteSpace  9783
 
 namespace Game {
     
@@ -117,7 +120,7 @@ namespace Game {
          3      droping
          4      deleteing
          5      deleted
-         99     storn//可消除物
+         CDestoryKO     storn//可消除物
          100    k.o.//不可消除物
          */
         int cellsStatus[CELLNUM][CELLNUM];

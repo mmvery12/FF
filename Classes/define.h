@@ -6,6 +6,10 @@ typedef int column;
 typedef int row;
 
 
+#define CDestoryKO 9781
+#define CNDestoryKO 9782
+#define WhiteSpace  9783
+
 typedef map<int,int> PosMap;
 typedef map<int,int> MoveMap;
 typedef map<int,int> CellMap;

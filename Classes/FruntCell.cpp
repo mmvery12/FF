@@ -177,7 +177,7 @@ namespace Game {
     {
         _canTouch=true;
         _isMoving=false;
-        
+
         _layer->movingComplete((Layer *)this);
     }
     
@@ -307,7 +307,7 @@ namespace Game {
         this->addChild(fruntSp);
         return true;
     }
-    //-1没有图,0随机，1-9固定头像，99云朵
+    //-1没有图,0随机，1-9固定头像，CDestoryKO云朵
     void FruntCell::setType(int type)
     {
         cellType=type;
@@ -315,7 +315,7 @@ namespace Game {
             cellType=1+std::rand()%CELLNUM;
         }
         char pic[30]="";
-        if (type==99) {
+        if (type==CDestoryKO) {
             std::sprintf(pic, "yun.png");
         }else
             if (type==100) {

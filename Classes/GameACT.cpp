@@ -563,6 +563,7 @@ namespace Game
         if (!_isMoving.empty()) {
             _isMoving.pop_back();
         }
+        temp->showAnimation();
     }
 
     void GameLayer::movingComplete2(Layer *cell)
@@ -575,7 +576,6 @@ namespace Game
 
     void GameLayer::deleteComplete(Layer *cell)
     {
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
         this->removeChild(cell);
         if (!_isDeleteing.empty()) {
             _isDeleteing.pop_back();
@@ -611,9 +611,7 @@ namespace Game
     }
     void GameLayer::moveAndDeleteComplete(Layer *cell)
     {
-        FruntCell *temp=dynamic_cast<FruntCell *>(cell);
         this->removeChild(cell);
-    
         if (!_isMoveAndDeleteing.empty()) {
             _isMoveAndDeleteing.pop_back();
         }
@@ -715,7 +713,6 @@ namespace Game
 
     void GameLayer::IIIIII()
     {
-        
         for (int i=0; i<CELLNUM; i++) {
             addCount[i] = 1;
         }
@@ -728,7 +725,7 @@ namespace Game
             for (int row=0; row<CELLNUM; row++) {
                 for (int col=0; col<CELLNUM; col++) {
 
-
+                    
                     if (isNormalCellIndexAndNullCell({row,col}) && isNormalCellIndex({row,col}) && row==CELLNUM-1) {//最顶层下落点没有cell，即添加cell
                         long long tag = colRowToInt(col, row);
                         dropTumpit = dropTump.begin();
@@ -747,6 +744,7 @@ namespace Game
                             tempindex.rowPos = row;
                             cell->joinCellAnimation(DropAnimation, tempindex,{(int)addCount[col]+row,col});
                             addCount[col] = addCount[col]+1;
+                            
                             log("row %d col %d to create",row,col);
                         }
                         
@@ -770,11 +768,11 @@ namespace Game
                         bool rightIsKo = false;
                         
                         
-                        if (col!=0 && row!=0 &&
-                            isNormalCellIndexAndNullCell({row-1,col+1})) {
+                        if (row!=0 &&
+                            isNormalCellIndexAndNullCell({row-1,col+1}) && col!=CELLNUM-1) {
                             downRightIsNUll = true;
                         }
-                        if (downRightIsNUll && isKoCellIndex({row,col+1})) {
+                        if (downRightIsNUll && isKoCellIndex({row,col+1}) && col!=CELLNUM-1) {
                             for (int i=row; i<CELLNUM ; i++) {
                                 for (int j=col; j>=0; j--) {
                                     if (isKoCellIndex({i,j+1}) && isNormalCellIndex({i,j})) {
@@ -839,17 +837,24 @@ namespace Game
                         if (downIsNull) {
                             flag = true;
                             cell->joinCellAnimation(DropAnimation, {row-1,col}, cell->getCellIndex());
-                            log("row %d col %d to down",row,col);
+                            log("row %d col %d to down row %d col %d",row,col,row-1,col);
+                            
                         }else
                         if ((downIsCell || downIsKo) && downLeftIsNull && leftIsKo) {
                             flag = true;
                             cell->joinCellAnimation(DropAnimation, {row-1,col-1}, cell->getCellIndex());
-                            log("row %d col %d to lef",row,col);
+                            log("row %d col %d to lef row %d col %d",row,col,row-1,col-1);
+                            
                         }else
                         if ((downIsCell || downIsKo) && downRightIsNUll && rightIsKo) {
+                            
                             flag = true;
-                            log("row %d col %d to right",row,col);
-                            cell->joinCellAnimation(DropAnimation, {row-1,col+1}, cell->getCellIndex());
+                            log("row %d col %d to right row %d col %d",row,col,row-1,col+1);
+                            if (col==8) {
+                                
+                            }else
+                                cell->joinCellAnimation(DropAnimation, {row-1,col+1}, cell->getCellIndex());
+                            
                         }
                     }
                 }
@@ -862,6 +867,16 @@ namespace Game
                 ff++;
             }
         } while (flag);
+        
+        for (int i=0; i<CELLNUM; i++) {
+            for (int j=0; j<CELLNUM; j++) {
+                FruntCell *cell1=getCellWithIndex({i,j});
+                if (cell1) {
+                    cell1->showAnimation();
+                }
+            }
+        }
+        
         /*
         return;
         /////////////
@@ -1062,7 +1077,7 @@ namespace Game
             if (tempdrop.empty()) {
                 continue;
             }
-            //应该从下向上统计，遇到＝5list中的cell需下落个数count ＋1，遇到＝－1、100、99，count重置
+            //应该从下向上统计，遇到＝5list中的cell需下落个数count ＋1，遇到＝－1、100、CDestoryKO，count重置
             map<long long ,int> temodropmap;
             int ddcount = 0;
             for (int row = 0; row<CELLNUM; row++) {
@@ -1286,12 +1301,14 @@ namespace Game
             }
             if (have) {
                 cell1->joinCellAnimation(OnlyMoveAnimation2, c2,cell1->getCellIndex());
-                cell2->joinCellAnimation(OnlyMoveAnimation2, c1,cell1->getCellIndex());
+                cell2->joinCellAnimation(OnlyMoveAnimation2, c1,cell2->getCellIndex());
             }else
             {
                 cell1->joinCellAnimation(OnlyMoveAnimation, c2,cell1->getCellIndex());
-                cell2->joinCellAnimation(OnlyMoveAnimation, c1,cell1->getCellIndex());
+                cell2->joinCellAnimation(OnlyMoveAnimation, c1,cell2->getCellIndex());
             }
+            cell1->showAnimation();
+            cell2->showAnimation();
         }
     }
 
@@ -1382,12 +1399,17 @@ namespace Game
                     if (cell1) {
                         if (count==3) {
                             cell1->joinCellAnimation(DeleteAnimation, cell1->getCellIndex(),cell1->getCellIndex());
+                            
                         }else
                             if (count>=4) {
                                 if (cell1->isCellIndexEqual(index, temp)) {
-                                    cell1->joinCellAnimation(LightAnimate, index,cell1->getCellIndex());
+                                    cell1->joinCellAnimation(LightAnimate, cell1->getCellIndex(),cell1->getCellIndex());
+                                    
                                 }else
-                                    cell1->joinCellAnimation(MoveAndDeleteAnimate, index,cell1->getCellIndex());
+                                {
+                                    cell1->joinCellAnimation(DeleteAnimation, cell1->getCellIndex(),cell1->getCellIndex());
+                                    
+                                }
                             }
                         cellt = cell1;
                         dropCount[temp.columnPos].push_back(temp.rowPos);
@@ -1395,6 +1417,14 @@ namespace Game
                 }
             }
             _lastDeleteCell = cellt;
+            for (int i=0; i<CELLNUM; i++) {
+                for (int j=0; j<CELLNUM; j++) {
+                    FruntCell *cell1=getCellWithIndex({i,j});
+                    if (cell1) {
+                        cell1->showAnimation();
+                    }
+                }
+            }
         }
     }
     
@@ -1715,15 +1745,15 @@ namespace Game
     void GameLayer::loadGameMap()
     {
         int temp[9][9] = {
-            {99,    1,   99,    1,    99,    1,    99,    1,   99},
-            { 1,   99,    1,   99,     1,   99,     1,   99,    1},
-            {99,    1,   99,    1,    99,    1,    99,    1,   99},
-            {99,    4,    4,    3,     4,    2,     1,    2,   99},
+            {CDestoryKO,    1,   CDestoryKO,    2,    CDestoryKO,    1,    CDestoryKO,    2,   CDestoryKO},
+            { 1,   CDestoryKO,    1,   CDestoryKO,     1,   CDestoryKO,     1,   CDestoryKO,    1},
+            {CDestoryKO,    2,   CDestoryKO,    1,    CDestoryKO,    2,    CDestoryKO,    1,   CDestoryKO},
+            {CDestoryKO,    5,    4,    3,     4,    2,     1,    2,   CDestoryKO},
             { 1,    1,    2,    4,     3,    5,     6,    4,    1},
-            { 3,    1,    2,    3,     2,    3,     2,    1,    7},
-            { 4,    5,    1,    5,     1,    5,     3,    4,    4},
-            { 3,    4,    5,    2,     1,    2,     2,    1,    5},
-            { 3,    4,    5,    6,     1,    7,     3,    4,    5}
+            { 3,    3,    3,    3,     2,    3,     2,    1,    7},
+            { 4,    3,    1,    5,     1,    5,     3,    4,    4},
+            { 3,    3,    5,    2,     5,    2,     2,    1,    5},
+            { 3,    3,    5,    6,     1,    7,     3,    4,    5}
         };
         dropTump.push_back(colRowToInt(0, 8));
         dropTump.push_back(colRowToInt(1, 8));
@@ -1740,8 +1770,8 @@ namespace Game
                 if (temp[row][column]==-1) {
                     createNewCell(column, CELLNUM-1 - row,temp[row][column],CELLNUM,-1);
                 }else
-                if (temp[row][column]==99) {
-                    createNewCell(column, CELLNUM-1 - row,temp[row][column],CELLNUM,99);
+                if (temp[row][column]==CDestoryKO) {
+                    createNewCell(column, CELLNUM-1 - row,temp[row][column],CELLNUM,CDestoryKO);
                 }else
                     if (temp[row][column]==100) {
                         createNewCell(column, CELLNUM-1 - row,temp[row][column],CELLNUM,100);
@@ -1754,7 +1784,7 @@ namespace Game
     
     FruntCell * GameLayer::getCellWithIndex(CellIndex index)
     {
-        if (cellsStatus[index.rowPos][index.columnPos]!=99 && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1) {
+        if (cellsStatus[index.rowPos][index.columnPos]!=CDestoryKO && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1) {
             Node *node1=this->getChildByTag(index.rowPos*CELLNUM+index.columnPos);
             FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
             return cell1;
@@ -1764,41 +1794,41 @@ namespace Game
     
     FruntCell * GameLayer::getKoCellWithIndex(CellIndex index)
     {
-        if (cellsStatus[index.rowPos][index.columnPos]==99) {
+        if (cellsStatus[index.rowPos][index.columnPos]==CDestoryKO) {
             Node *node1=this->getChildByTag(index.rowPos*CELLNUM+index.columnPos);
             FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
             return cell1;
         }
         return NULL;
     }
-    
+    //直出是否等于或存在，不能用与“否”表达式，只能用于验证是或着不是
     bool GameLayer::isNormalCellIndex(CellIndex index)
     {
-        if (cellsStatus[index.rowPos][index.columnPos]!=99 && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1) {
+        if (cellsStatus[index.rowPos][index.columnPos]!=CDestoryKO && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1) {
             return true;
         }
         return false;
     }
-    
+    //直出是否等于或存在，不能用与“否”表达式，只能用于验证是或着不是
     bool GameLayer::isKoCellIndex(CellIndex index)
     {
-        if (cellsStatus[index.rowPos][index.columnPos]==99 || cellsStatus[index.rowPos][index.columnPos]==100 || cellsStatus[index.rowPos][index.columnPos]==-1) {
+        if (cellsStatus[index.rowPos][index.columnPos]==CDestoryKO || cellsStatus[index.rowPos][index.columnPos]==100 || cellsStatus[index.rowPos][index.columnPos]==-1) {
             return true;
         }
         return false;
     }
-    
+    //直出是否等于或存在，不能用与“否”表达式，只能用于验证是或着不是
     bool GameLayer::isNormalCellIndexAndNullCell(CellIndex index)
     {
-        if (cellsStatus[index.rowPos][index.columnPos]!=99 && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1 && !getCellWithIndex(index)) {
+        if (cellsStatus[index.rowPos][index.columnPos]!=CDestoryKO && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1 && !getCellWithIndex(index)) {
             return true;
         }
         return false;
     }
-    
+    //直出是否等于或存在，不能用与“否”表达式，只能用于验证是或着不是
     bool GameLayer::isNormalCellIndexAndCell(CellIndex index)
     {
-        if (cellsStatus[index.rowPos][index.columnPos]!=99 && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1 && getCellWithIndex(index)) {
+        if (cellsStatus[index.rowPos][index.columnPos]!=CDestoryKO && cellsStatus[index.rowPos][index.columnPos]!=100 && cellsStatus[index.rowPos][index.columnPos]!=-1 && getCellWithIndex(index)) {
             return true;
         }
         return false;

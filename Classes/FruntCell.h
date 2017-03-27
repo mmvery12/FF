@@ -29,7 +29,7 @@ namespace Game {
             CellIndex preIndex;
         }AnimationStruct;
         
-        typedef list<AnimationStruct> AnimationList;
+        typedef Vector<FiniteTimeAction *> AnimationList;
         typedef AnimationList::iterator AnimationIterator;
     private:
         
@@ -60,7 +60,7 @@ namespace Game {
         CellIndex nowIndex;
         //
         
-        void showAnimation();
+        
         void movingAnimation(AnimationStruct animate);
         void movingAnimation2(AnimationStruct animate);
         void deleteAnimation(AnimationStruct animate);
@@ -85,7 +85,7 @@ namespace Game {
         bool isCellIndexEqual(CellIndex cell1,CellIndex cell2);
         void setNowIndex(int row,int column);
         void joinCellAnimation(AnimationType type, CellIndex moveTo,CellIndex from);
-        
+        void showAnimation();
         CellIndex getCellIndex();
         CellIndex getPreviseCellIndex();//cell上个状态的index
         
