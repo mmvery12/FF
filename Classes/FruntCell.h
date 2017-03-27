@@ -97,7 +97,7 @@ namespace Game {
         bool isAnimation();
         //old
         inline FruntCell(){};
-        inline virtual ~FruntCell(){};
+        inline ~FruntCell(){};
         unsigned cellType;//1,2...9
         
         CellStatus getCellStatus();

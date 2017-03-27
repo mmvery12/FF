@@ -423,24 +423,21 @@ namespace Game {
         if (!_canTouch) {
             return false;
         }
-        Size tempsize = getContentSize();
-        Point temppos = getPosition();
-        
-        Rect thispos= Rect(temppos.x, temppos.y, tempsize.width, tempsize.height);
-        
-        Point _p=pTouch->getLocation();
-        if (_isMoving) {
-            //CCLOG("ismoving");
-        }else
         {
-            //CCLOG("notmoving");
-        }
+            auto target = static_cast<Sprite*>(pEvent->getCurrentTarget());//获取的当前触摸的目标
+            
+            Point locationInNode = target->convertToNodeSpace(pTouch->getLocation());
+            Size s = target->getContentSize();
+            Rect rect = Rect(0, 0, s.width, s.height);
         
-        if (thispos.containsPoint(_p)&&_isMoving==false) {
-            _layer->clickAtInde(getCellIndex());
-            return true;
-        }else
-            return false;
+            if (rect.containsPoint(locationInNode) && !_isMoving)
+            {//判断触摸点是否在目标的范围内
+                _layer->clickAtInde(getCellIndex());
+                return true;
+            }
+            else
+                return false;
+        }
     }
     
     void FruntCell::onTouchMoved(Touch *pTouch, Event *pEvent)

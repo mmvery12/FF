@@ -105,9 +105,9 @@ namespace Game {
         list<int> dropCount[CELLNUM];
         
         void IIIIII();
-        void JJJJJJ();
-        bool KKKKKK(CellSquare square,int row);
-        FruntCell *DDDDDD(int fromcol,int tocol,long long dropcolrow);
+        //void JJJJJJ();
+        //bool KKKKKK(CellSquare square,int row);
+        //FruntCell *DDDDDD(int fromcol,int tocol,long long dropcolrow);
         void loadGameMap();
         /*
          -1     NULL
