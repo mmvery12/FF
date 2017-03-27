@@ -20,6 +20,7 @@ using namespace std;
 
 
 namespace Game {
+    static bool isCellIndexEqual(CellIndex cell1,CellIndex cell2);
     class FruntCell: public Layer
     {
         
@@ -82,7 +83,7 @@ namespace Game {
         void setType(int type);
         
         //new
-        bool isCellIndexEqual(CellIndex cell1,CellIndex cell2);
+        
         void setNowIndex(int row,int column);
         void joinCellAnimation(AnimationType type, CellIndex moveTo,CellIndex from);
         void showAnimation();

@@ -299,6 +299,15 @@ namespace Game
             {
                 DeleteUnitList rowmap = * rowtotalunitdelit;
                 DeleteUnitListIterator it = rowmap.begin();
+                
+                DeleteFNMapIterator premapit = prefnmap.begin();
+                for (; premapit!=prefnmap.end(); premapit++) {
+                    DeleteUnitList temprowmap = premapit->second;
+                    DeleteUnitList temp = rowmap;
+                    temprowmap.merge(temp);
+                    temprowmap.unique();
+                }
+                
                 it++;
                 if (rowmap.size()==3) {
                     fnmap.insert(pair<int, DeleteUnitList>(rowmap.size()+*it,rowmap));
@@ -315,6 +324,15 @@ namespace Game
             {
                 DeleteUnitList colmap = * coltotalunitdelit;
                 DeleteUnitListIterator it = colmap.begin();
+                
+                DeleteFNMapIterator premapit = prefnmap.begin();
+                for (; premapit!=prefnmap.end(); premapit++) {
+                    DeleteUnitList tempcowmap = premapit->second;
+                    DeleteUnitList temp = colmap;
+                    tempcowmap.merge(temp);
+                    tempcowmap.unique();
+                }
+                
                 it++;
                 if (colmap.size()==3) {
                     fnmap.insert(pair<int, DeleteUnitList>(colmap.size()+*it,colmap));
@@ -456,7 +474,7 @@ namespace Game
             return;
         }
         CCLOG("---> GameLayer : click at index column=%d row=%d tag=%d\r\n",index.columnPos,index.rowPos,index.rowPos*CELLNUM+index.columnPos);
-        _lastedClick=index;
+        
     }
     
     void GameLayer::direction(MoveDirection dir,CellIndex lastedClick)
@@ -568,7 +586,6 @@ namespace Game
 
     void GameLayer::movingComplete2(Layer *cell)
     {
-
         if (!_isMoving.empty()) {
             _isMoving.pop_back();
         }
@@ -767,7 +784,7 @@ namespace Game
                         bool leftIsKo = false;
                         bool rightIsKo = false;
                         
-                        
+                        //向右下落
                         if (row!=0 &&
                             isNormalCellIndexAndNullCell({row-1,col+1}) && col!=CELLNUM-1) {
                             downRightIsNUll = true;
@@ -800,7 +817,7 @@ namespace Game
                             }
                         }
                         
-                        
+                        //向左下落
                         if (col!=0 && row!=0 &&
                             isNormalCellIndexAndNullCell({row-1,col-1})) {
                             downLeftIsNull = true;
@@ -1189,6 +1206,8 @@ namespace Game
     {
         if (_isMoving.empty() && _isDropping.empty() && _isDeleteing.empty() && _isMoveAndDeleteing.empty() && _islighting.empty()) {
             findCurrent();
+            _exchangeClick = {-1,-1};
+            _exchangeClick2 = {-1,-1};
         }
     }
 
@@ -1292,8 +1311,8 @@ namespace Game
             for (; it!=prefnmap.end(); it++) {
                 CellIndex index1 = preCanDeleteCurrentCellIndex(it->first);
                 CellIndex index2 = preCanDeleteTargetCellIndex(it->first);
-                if ((cell1->isCellIndexEqual(c1, index1) && cell2->isCellIndexEqual(c2, index2)) ||
-                    (cell1->isCellIndexEqual(c1, index2) && cell2->isCellIndexEqual(c2, index1))) {
+                if ((isCellIndexEqual(c1, index1) && isCellIndexEqual(c2, index2)) ||
+                    (isCellIndexEqual(c1, index2) && isCellIndexEqual(c2, index1))) {
                     have = true;
                     prefnmap.erase(it);
                     break;
@@ -1302,6 +1321,8 @@ namespace Game
             if (have) {
                 cell1->joinCellAnimation(OnlyMoveAnimation2, c2,cell1->getCellIndex());
                 cell2->joinCellAnimation(OnlyMoveAnimation2, c1,cell2->getCellIndex());
+                _exchangeClick = c1;
+                _exchangeClick2 = c2;
             }else
             {
                 cell1->joinCellAnimation(OnlyMoveAnimation, c2,cell1->getCellIndex());
@@ -1372,7 +1393,7 @@ namespace Game
             
         }else
         {
-            prefnmap.clear();
+            
             //有下落过程时，所有cell禁止touch
             for (int col = 0; col<CELLNUM; col++) {
                 
@@ -1389,8 +1410,13 @@ namespace Game
             DeleteFNMapIterator it = beDelMap.begin();
             FruntCell *cellt;
             for (; it!=beDelMap.end(); it++) {
-                CellIndex index = intToColRow(it->first);
-                int count = (int)(it->first - colRowToInt(index.columnPos, index.rowPos));
+                CellIndex centerindex = intToColRow(it->first);
+                int count = (int)(it->first - colRowToInt(centerindex.columnPos, centerindex.rowPos));
+#warning 这里centerindex暂时没法直出
+                if (!isCellIndexEqual(_exchangeClick, {-1,-1})) {
+                    centerindex = {-1,-1};
+                }
+                
                 DeleteUnitList list = it->second;
                 DeleteUnitListIterator listit = list.begin();
                 for (; listit!=list.end(); listit++) {
@@ -1399,16 +1425,29 @@ namespace Game
                     if (cell1) {
                         if (count==3) {
                             cell1->joinCellAnimation(DeleteAnimation, cell1->getCellIndex(),cell1->getCellIndex());
-                            
                         }else
                             if (count>=4) {
-                                if (cell1->isCellIndexEqual(index, temp)) {
-                                    cell1->joinCellAnimation(LightAnimate, cell1->getCellIndex(),cell1->getCellIndex());
+                                /*
+                                DeleteFNMapIterator premapit = prefnmap.begin();
+                                for (; premapit!=prefnmap.end(); premapit++) {
                                     
+                                }
+                                */
+                                if (isCellIndexEqual(temp, _exchangeClick))
+                                {
+                                    cell1->joinCellAnimation(LightAnimate, cell1->getCellIndex(),cell1->getCellIndex());
+                                    centerindex = _exchangeClick;
+                                }else
+                                if (isCellIndexEqual(temp, _exchangeClick2))
+                                {
+                                    cell1->joinCellAnimation(LightAnimate, cell1->getCellIndex(),cell1->getCellIndex());
+                                    centerindex = _exchangeClick2;
+                                }else
+                                if (isCellIndexEqual(centerindex, temp)) {
+                                    cell1->joinCellAnimation(LightAnimate, cell1->getCellIndex(),cell1->getCellIndex());
                                 }else
                                 {
                                     cell1->joinCellAnimation(DeleteAnimation, cell1->getCellIndex(),cell1->getCellIndex());
-                                    
                                 }
                             }
                         cellt = cell1;
@@ -1425,6 +1464,8 @@ namespace Game
                     }
                 }
             }
+            prefnmap.clear();
+            
         }
     }
     
@@ -1745,15 +1786,15 @@ namespace Game
     void GameLayer::loadGameMap()
     {
         int temp[9][9] = {
-            {CDestoryKO,    1,   CDestoryKO,    2,    CDestoryKO,    1,    CDestoryKO,    2,   CDestoryKO},
-            { 1,   CDestoryKO,    1,   CDestoryKO,     1,   CDestoryKO,     1,   CDestoryKO,    1},
-            {CDestoryKO,    2,   CDestoryKO,    1,    CDestoryKO,    2,    CDestoryKO,    1,   CDestoryKO},
-            {CDestoryKO,    5,    4,    3,     4,    2,     1,    2,   CDestoryKO},
-            { 1,    1,    2,    4,     3,    5,     6,    4,    1},
-            { 3,    3,    3,    3,     2,    3,     2,    1,    7},
-            { 4,    3,    1,    5,     1,    5,     3,    4,    4},
-            { 3,    3,    5,    2,     5,    2,     2,    1,    5},
-            { 3,    3,    5,    6,     1,    7,     3,    4,    5}
+            {CDestoryKO,    1, CDestoryKO,          2, CDestoryKO,    1,    CDestoryKO,    2,   CDestoryKO},
+            { 1,   CDestoryKO,          1, CDestoryKO,          1,   CDestoryKO,     1,   CDestoryKO,    1},
+            {CDestoryKO,    2, CDestoryKO,          1,    CDestoryKO,    2,    CDestoryKO,    1,   CDestoryKO},
+            {CDestoryKO,    5,          4,          3,          4,    2,     1,    2,   CDestoryKO},
+            { 1,            2,          1,          1,          3,    5,     6,    4,    1},
+            {CDestoryKO,    1,          5,          2,          3,    3,     2,    1,    7},
+            { 3,            5,          3,          5,          4,    4,     3,    4,    4},
+            { 4,            3,          5,          2,          5,    2,     2,    1,    5},
+            { 3,            3,          5,          6,          1,    7,     3,    4,    5}
         };
         dropTump.push_back(colRowToInt(0, 8));
         dropTump.push_back(colRowToInt(1, 8));

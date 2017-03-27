@@ -100,10 +100,10 @@ namespace Game {
         CellIndex preCanDeleteCurrentCellIndex(long long colrowint);
         
         CellIndex compute(MoveDirection dir,CellIndex lastedClick);
-        CellIndex _lastedClick;
-        
         CellIndex compute2(MoveDirection dir,CellIndex lastedClick);
-        CellIndex _lastedClick2;
+        
+        CellIndex _exchangeClick;
+        CellIndex _exchangeClick2;
         
         list<int> dropCount[CELLNUM];
         

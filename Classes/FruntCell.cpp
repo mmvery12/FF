@@ -9,7 +9,7 @@
 #include "FruntCell.h"
 
 namespace Game {
-    bool FruntCell::isCellIndexEqual(CellIndex cell1,CellIndex cell2)
+    bool isCellIndexEqual(CellIndex cell1,CellIndex cell2)
     {
         if (cell1.columnPos==cell2.columnPos&&cell1.rowPos==cell2.rowPos) return true;
         return false;
@@ -74,7 +74,7 @@ namespace Game {
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
-        FiniteTimeAction *act2=MoveTo::create(1, Vec2(cloumnPos, rowPos));
+        FiniteTimeAction *act2=MoveTo::create(.3, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::movingAnimationComplete, this));
         animationList.pushBack(act2);
         animationList.pushBack(act3);
@@ -89,7 +89,7 @@ namespace Game {
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
-        FiniteTimeAction *act2=MoveTo::create(1, Vec2(cloumnPos, rowPos));
+        FiniteTimeAction *act2=MoveTo::create(.3, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::movingAnimationComplete2, this));
         animationList.pushBack(act2);
         animationList.pushBack(act3);
@@ -110,7 +110,7 @@ namespace Game {
         double rowPos=width*temp.rowPos;
         
         int time = abs(pre.rowPos-temp.rowPos);
-        FiniteTimeAction *act2=MoveTo::create(time, Vec2(cloumnPos, rowPos));
+        FiniteTimeAction *act2=MoveTo::create(time*.3, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::dropAnimationComplelte, this));
         animationList.pushBack(act2);
         animationList.pushBack(act3);
@@ -125,7 +125,7 @@ namespace Game {
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
-        FiniteTimeAction *act2=Blink::create(2.0f, 3);
+        FiniteTimeAction *act2=Blink::create(1.0f, 3);
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::deleteAnimationComplete, this));
         animationList.pushBack(act2);
         animationList.pushBack(act3);
@@ -141,7 +141,7 @@ namespace Game {
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
-        FiniteTimeAction *act2=Blink::create(2.0f, 3);
+        FiniteTimeAction *act2=Blink::create(1.0f, 3);
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::moveAndDeleteAnimateComplete, this));
         animationList.pushBack(act2);
         animationList.pushBack(act3);
@@ -159,7 +159,7 @@ namespace Game {
         double cloumnPos=width*(temp.columnPos%CELLNUM);
         double rowPos=width*temp.rowPos;
         
-        FiniteTimeAction *act2=Blink::create(2.0f, 3);
+        FiniteTimeAction *act2=Blink::create(1.0f, 3);
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::lightAnimatimateComplete, this));
         animationList.pushBack(act2);
         animationList.pushBack(act3);
