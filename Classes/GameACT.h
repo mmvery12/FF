@@ -28,7 +28,7 @@
 #include "help.h"
 #include "ClickDelegate.h"
 #include "define.h"
-
+#include "Util.hpp"
 #include "cocos2d.h"
 using namespace cocos2d;
 using std::string;
@@ -70,8 +70,6 @@ namespace Game {
         if (cell1.columnPos==cell2.columnPos&&cell1.rowPos==cell2.rowPos) return true;
         return false;
     }
-    
-    
     
     static void *thr_fun(void *arge);
     

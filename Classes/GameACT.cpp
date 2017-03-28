@@ -1385,7 +1385,6 @@ namespace Game
     
     void GameLayer::findCurrent()
     {
-        
         DeleteFNMap beDelMap = TODO_FindDeleteCells();
         if (beDelMap.empty()) {
             if (prefnmap.empty()) {
@@ -1452,12 +1451,7 @@ namespace Game
                             cell1->joinCellAnimation(DeleteAnimation, cell1->getCellIndex(),cell1->getCellIndex());
                         }else
                             if (count>=4) {
-                                /*
-                                DeleteFNMapIterator premapit = prefnmap.begin();
-                                for (; premapit!=prefnmap.end(); premapit++) {
-                                    
-                                }
-                                */
+                                
                                 if (isCellIndexEqual(temp, _exchangeClick))
                                 {
                                     cell1->joinCellAnimation(LightAnimate, cell1->getCellIndex(),cell1->getCellIndex());
@@ -1666,11 +1660,13 @@ namespace Game
     FruntCell * GameLayer::createNewCell(int column,int row,int type, int rowcount,int status)
     {
         FruntCell *_fs=FruntCell::create();
-        double width=Director::getInstance()->getWinSize().width/rowcount;
+        double width=getCellWidth(rowcount);
+        //Director::getInstance()->getWinSize().width/rowcount;
         _fs->setContentSize(Size(width, width));
-        double _cloumnPos=width*(column%rowcount);
+        double _cloumnPos=width*(column%rowcount)+getMapLeftPadding();
         double _rowPos;
-        _rowPos=width*row+Director::getInstance()->getWinSize().height*100./750.;
+        _rowPos=width*row+getMapBottomPadding();
+        //Director::getInstance()->getWinSize().height*100./750.;
         _fs->setPosition(Vec2(_cloumnPos, _rowPos));
         this->addChild(_fs);
         _fs->setNowIndex(row, column);
@@ -1683,11 +1679,13 @@ namespace Game
     FruntCell * GameLayer::createNewCell2(int column,int row,int tagcolumn,int tagrow, int rowcount)
     {
         FruntCell *_fs=FruntCell::create();
-        double width=Director::getInstance()->getWinSize().width/rowcount;
+        double width=getCellWidth(rowcount);
+        //Director::getInstance()->getWinSize().width/rowcount;
         _fs->setContentSize(Size(width, width));
-        double _cloumnPos=width*(column%rowcount);
+        double _cloumnPos=width*(column%rowcount)+getMapLeftPadding();
         double _rowPos;
-        _rowPos=width*row+Director::getInstance()->getWinSize().height*100./750.;
+        _rowPos=width*row+getMapBottomPadding();
+        //Director::getInstance()->getWinSize().height*100./750.;
         _fs->setPosition(Vec2(_cloumnPos, _rowPos));
         this->addChild(_fs);
         

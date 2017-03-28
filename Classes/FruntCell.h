@@ -15,11 +15,13 @@
 #include "help.h"
 #include "ClickDelegate.h"
 #include "cocos2d.h"
+#include "Util.hpp"
 using namespace cocos2d;
 using namespace std;
 
 
 namespace Game {
+
     static bool isCellIndexEqual(CellIndex cell1,CellIndex cell2);
     class FruntCell: public Layer
     {
