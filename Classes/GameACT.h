@@ -99,6 +99,8 @@ namespace Game {
         CellIndex preCanDeleteTargetCellIndex(long long colrowint);
         CellIndex preCanDeleteCurrentCellIndex(long long colrowint);
         
+        
+        
         CellIndex compute(MoveDirection dir,CellIndex lastedClick);
         CellIndex compute2(MoveDirection dir,CellIndex lastedClick);
         

@@ -23,6 +23,7 @@ namespace Game {
     
     void FruntCell::joinCellAnimation(AnimationType type, CellIndex moveTo,CellIndex from)
     {
+        
         AnimationStruct temp;
         temp.animationtype = type;
         temp.toIndex = moveTo;
@@ -73,7 +74,7 @@ namespace Game {
         
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
-        double rowPos=width*temp.rowPos;
+        double rowPos=width*temp.rowPos+Director::getInstance()->getWinSize().height*100./750.;
         FiniteTimeAction *act2=MoveTo::create(.3, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::movingAnimationComplete, this));
         animationList.pushBack(act2);
@@ -88,7 +89,7 @@ namespace Game {
         _layer->moving((Layer *)this);
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
-        double rowPos=width*temp.rowPos;
+        double rowPos=width*temp.rowPos+Director::getInstance()->getWinSize().height*100./750.;
         FiniteTimeAction *act2=MoveTo::create(.3, Vec2(cloumnPos, rowPos));
         ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::movingAnimationComplete2, this));
         animationList.pushBack(act2);
@@ -107,7 +108,7 @@ namespace Game {
         _layer->droping(this);
         double width=Director::getInstance()->getWinSize().width/CELLNUM;
         double cloumnPos=width*(temp.columnPos%CELLNUM);
-        double rowPos=width*temp.rowPos;
+        double rowPos=width*temp.rowPos+Director::getInstance()->getWinSize().height*100./750.;
         
         int time = abs(pre.rowPos-temp.rowPos);
         FiniteTimeAction *act2=MoveTo::create(time*.3, Vec2(cloumnPos, rowPos));
@@ -295,14 +296,11 @@ namespace Game {
         
         _isDeleteing=false;
         _isDropping=false;
-        setTouchEnabled(true);
         _status=cellNormale;
-        
-        int temp=cellType=0;
-        temp=1+std::rand()%CELLNUM;
-        cellType=temp;
+    
         char pic[30]="";
-        std::sprintf(pic, "fruit0%d-HD.png",cellType);
+        int type=1+std::rand()%6;
+        std::sprintf(pic, "item_%d.png",type);
         fruntSp=Sprite::create(pic);
         this->addChild(fruntSp);
         return true;
@@ -312,7 +310,7 @@ namespace Game {
     {
         cellType=type;
         if (type==0) {
-            cellType=1+std::rand()%CELLNUM;
+            cellType=1+std::rand()%6;
         }
         char pic[30]="";
         if (type==CDestoryKO) {
@@ -321,7 +319,7 @@ namespace Game {
             if (type==100) {
                 std::sprintf(pic, "100.png");
             }else
-                std::sprintf(pic, "fruit0%d-HD.png",cellType);
+                std::sprintf(pic, "item_%d.png",cellType);
         fruntSp->setTexture(pic);
     }
     /*
@@ -378,6 +376,7 @@ namespace Game {
         Point _begin=pTouch->getStartLocation();
         Point _pos=pTouch->getLocation();
         _layer->direction(computeDirection(_begin, _pos),getCellIndex());
+        log("touchend");
     }
     
     

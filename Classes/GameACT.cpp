@@ -284,6 +284,9 @@ namespace Game
             DeleteTotalUnitListIterator delit=temp2.begin();
             for (;delit!=temp2.end();delit++)
             {
+                if (temp2.size()==5) {
+                    
+                }
                 coltotalunitList.push_back(*delit);
             }
         }
@@ -561,6 +564,8 @@ namespace Game
     void GameLayer::moving(Layer *cell)
     {
         _isMoving.push_back(1);
+        log("%lu",_isMoving.size());
+        dynamic_cast<FruntCell *>(cell)->_canTouch = false;
     }
     
     void GameLayer::deleteing(Layer *cell)
@@ -582,6 +587,7 @@ namespace Game
             _isMoving.pop_back();
         }
         temp->showAnimation();
+        dynamic_cast<FruntCell *>(cell)->_canTouch = true;
     }
 
     void GameLayer::movingComplete2(Layer *cell)
@@ -589,6 +595,8 @@ namespace Game
         if (!_isMoving.empty()) {
             _isMoving.pop_back();
         }
+        dynamic_cast<FruntCell *>(cell)->_canTouch = true;
+        
     }
 
     void GameLayer::deleteComplete(Layer *cell)
@@ -850,6 +858,7 @@ namespace Game
                         }
                         
                         
+                        
                         cell = getCellWithIndex({row,col});
                         if (downIsNull) {
                             flag = true;
@@ -857,22 +866,44 @@ namespace Game
                             log("row %d col %d to down row %d col %d",row,col,row-1,col);
                             
                         }else
-                        if ((downIsCell || downIsKo) && downLeftIsNull && leftIsKo) {
-                            flag = true;
-                            cell->joinCellAnimation(DropAnimation, {row-1,col-1}, cell->getCellIndex());
-                            log("row %d col %d to lef row %d col %d",row,col,row-1,col-1);
-                            
-                        }else
-                        if ((downIsCell || downIsKo) && downRightIsNUll && rightIsKo) {
-                            
-                            flag = true;
-                            log("row %d col %d to right row %d col %d",row,col,row-1,col+1);
-                            if (col==8) {
+                            if (CELLNUM/2.<=col) {
+                                if ((downIsCell || downIsKo) && downLeftIsNull && leftIsKo) {
+                                    flag = true;
+                                    cell->joinCellAnimation(DropAnimation, {row-1,col-1}, cell->getCellIndex());
+                                    log("row %d col %d to lef row %d col %d",row,col,row-1,col-1);
+                                    
+                                }else
+                                if ((downIsCell || downIsKo) && downRightIsNUll && rightIsKo) {
+                                    
+                                    flag = true;
+                                    log("row %d col %d to right row %d col %d",row,col,row-1,col+1);
+                                    if (col==8) {
+                                        
+                                    }else
+                                        cell->joinCellAnimation(DropAnimation, {row-1,col+1}, cell->getCellIndex());
+                                    
+                                }
                                 
                             }else
-                                cell->joinCellAnimation(DropAnimation, {row-1,col+1}, cell->getCellIndex());
-                            
-                        }
+                                if (CELLNUM/2.>=col) {
+                                    if ((downIsCell || downIsKo) && downRightIsNUll && rightIsKo) {
+                                        
+                                        flag = true;
+                                        log("row %d col %d to right row %d col %d",row,col,row-1,col+1);
+                                        if (col==8) {
+                                            
+                                        }else
+                                            cell->joinCellAnimation(DropAnimation, {row-1,col+1}, cell->getCellIndex());
+                                        
+                                    }else
+                                    if ((downIsCell || downIsKo) && downLeftIsNull && leftIsKo) {
+                                        flag = true;
+                                        cell->joinCellAnimation(DropAnimation, {row-1,col-1}, cell->getCellIndex());
+                                        log("row %d col %d to lef row %d col %d",row,col,row-1,col-1);
+                                        
+                                    }
+                                }
+                        
                     }
                 }
             }
@@ -909,6 +940,9 @@ namespace Game
         }
          */
     }
+    
+    
+    
     
     /*
     FruntCell *GameLayer::DDDDDD(int fromcol,int endcol,long long dropcolrow)
@@ -1301,12 +1335,16 @@ namespace Game
         Node *node2=this->getChildByTag(c2.rowPos*CELLNUM+c2.columnPos);
         FruntCell *cell1=dynamic_cast<FruntCell *>(node1);
         FruntCell *cell2=dynamic_cast<FruntCell *>(node2);
+        
         if (node1!=NULL&&node2!=NULL &&
-            !cell1->isAnimation() && !cell2->isAnimation()) {
-    
+            !cell1->isAnimation() && !cell2->isAnimation() &&
+            _isMoving.empty()) {
+            cell1->_canTouch = false;
+            cell2->_canTouch = false;
             //移动的cell在可消除cell序列中，则安步执行所有不可点击、消除、新增cell、下落cell、所有可点击步骤
             //移动的cell不在可消除cell序列中，先让所有cell不可颠，动画完成后让所有cell可点
             DeleteFNMapIterator it = prefnmap.begin();
+            
             bool have = false;
             for (; it!=prefnmap.end(); it++) {
                 CellIndex index1 = preCanDeleteCurrentCellIndex(it->first);
@@ -1325,12 +1363,13 @@ namespace Game
                 _exchangeClick2 = c2;
             }else
             {
-                cell1->joinCellAnimation(OnlyMoveAnimation, c2,cell1->getCellIndex());
-                cell2->joinCellAnimation(OnlyMoveAnimation, c1,cell2->getCellIndex());
+                cell1->joinCellAnimation(OnlyMoveAnimation, c2,c1);
+                cell2->joinCellAnimation(OnlyMoveAnimation, c1,c2);
             }
             cell1->showAnimation();
             cell2->showAnimation();
         }
+        
     }
 
     
@@ -1340,21 +1379,7 @@ namespace Game
     
     void GameLayer::update(float dt)
     {
-        
-        float ct1 = progress->getPercentage();
-        
-        if (ct1 != 0)
-        {
-            dtf = ct1 - 0.1f;
-            progress->setPercentage(dtf);
-        }
-        else
-        {
-            //            CCTransitionFade *tScene = CCTransitionFade::create(2, HelloWorld::scene(), ccWHITE);
-            //            Director::getInstance()->replaceScene(tScene);
-        }
         timeCallBack();
-        
     }
     
     
@@ -1472,6 +1497,9 @@ namespace Game
     
     DeleteFNMap GameLayer::TODO_FindDeleteCells2(int trow,int tcolumn,int trow2,int tcolumn2)
     {
+        if (trow==2 && tcolumn==1 && trow2==2 && tcolumn2==0) {
+            
+        }
         DeleteFNMap fnmap;
         DeleteTotalUnitList rowtotalunitList;
         DeleteTotalUnitList coltotalunitList;
@@ -1537,7 +1565,7 @@ namespace Game
                 if (rowmap.size()==3) {
                     fnmap.insert(pair<long long, DeleteUnitList>(rowmap.size(),rowmap));
                 }
-                if (rowmap.size()==4) {
+                if (rowmap.size()>=4) {
                     fnmap.insert(pair<long long, DeleteUnitList>(rowmap.size(),rowmap));
                 }
                 
@@ -1548,7 +1576,7 @@ namespace Game
                 if (colmap.size()==3) {
                     fnmap.insert(pair<long long, DeleteUnitList>(colmap.size(),colmap));
                 }
-                if (colmap.size()==4) {
+                if (colmap.size()>=4) {
                     fnmap.insert(pair<long long, DeleteUnitList>(colmap.size(),colmap));
                 }
                 
@@ -1642,7 +1670,7 @@ namespace Game
         _fs->setContentSize(Size(width, width));
         double _cloumnPos=width*(column%rowcount);
         double _rowPos;
-        _rowPos=width*row;
+        _rowPos=width*row+Director::getInstance()->getWinSize().height*100./750.;
         _fs->setPosition(Vec2(_cloumnPos, _rowPos));
         this->addChild(_fs);
         _fs->setNowIndex(row, column);
@@ -1659,14 +1687,13 @@ namespace Game
         _fs->setContentSize(Size(width, width));
         double _cloumnPos=width*(column%rowcount);
         double _rowPos;
-        _rowPos=width*row;
+        _rowPos=width*row+Director::getInstance()->getWinSize().height*100./750.;
         _fs->setPosition(Vec2(_cloumnPos, _rowPos));
         this->addChild(_fs);
         
         _fs->setNowIndex(tagrow, tagcolumn);
         _fs->registDelegate(this);
-        cellsStatus[tagrow][tagcolumn]=3;
-        int temp=1+std::rand()%CELLNUM;
+        int temp=1+std::rand()%6;
         _fs->setType(temp);
         return _fs;
     }
@@ -1727,7 +1754,7 @@ namespace Game
         float winh = size.height;
         
         {//bg
-            Sprite* pSprite = Sprite::create("bg-HD.png");
+            Sprite* pSprite = Sprite::create("game_bg.png");
             pSprite->setPosition(Vec2(winw/2, winh/2));
             float spx = pSprite->getTextureRect().size.width;
             float spy = pSprite->getTextureRect().size.height;
@@ -1742,24 +1769,7 @@ namespace Game
             menu->setPosition(Vec2(60, Director::getInstance()->getWinSize().height-120));
             this->addChild(menu);
         }
-        {//progress
-            Sprite *pgBg=Sprite::create("progress2-HD.png");
-            pgBg->setPosition(Vec2(winw/2, winh-50));
-            pgBg->setContentSize(Size(winw-100, 20));
-            addChild(pgBg);
-            
-            Sprite *pSp = Sprite::create("progress1-HD.png");
-            progress = ProgressTimer::create(pSp);
-            progress->setType(ProgressTimer::Type::BAR);
-            progress->setPosition(Vec2(winw/2, winh-50));
-            progress->setContentSize(Size(winw-100,20));
-            progress->setPercentage(100);
-            progress->setMidpoint(Vec2(0,1));
-            progress->setBarChangeRate(Vec2(1,0));
 
-            this->addChild(progress);
-            dtf=100.0;
-        }
         
         for (int i=0; i<CELLNUM; i++) {
             list<int> temp;
@@ -1790,12 +1800,29 @@ namespace Game
             { 1,   CDestoryKO,          1, CDestoryKO,          1,   CDestoryKO,     1,   CDestoryKO,    1},
             {CDestoryKO,    2, CDestoryKO,          1,    CDestoryKO,    2,    CDestoryKO,    1,   CDestoryKO},
             {CDestoryKO,    5,          4,          3,          4,    2,     1,    2,   CDestoryKO},
-            { 1,            2,          1,          1,          3,    5,     6,    4,    1},
-            {CDestoryKO,    1,          5,          2,          3,    3,     2,    1,    7},
+            { 1,            3,          1,          1,          3,    5,     6,    4,    1},
+            {CDestoryKO,    3,          5,          2,          3,    3,     2,    1,    7},
             { 3,            5,          3,          5,          4,    4,     3,    4,    4},
-            { 4,            3,          5,          2,          5,    2,     2,    1,    5},
+            { 4,            3,          2,          2,          5,    2,     2,    1,    5},
             { 3,            3,          5,          6,          1,    7,     3,    4,    5}
         };
+        
+        //0.1,0.2,0.3,0.4  '0' 表示outside '.1.2.3.4'表示旋转度
+        //1.1,1.2,1.3,1.4  '1' 表示inside  '.1.2.3.4'表示旋转度
+        //2 表示地板
+        
+        int bg[9][9] = {
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+        };
+        
         dropTump.push_back(colRowToInt(0, 8));
         dropTump.push_back(colRowToInt(1, 8));
         dropTump.push_back(colRowToInt(2, 8));
