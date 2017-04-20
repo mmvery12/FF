@@ -59,6 +59,8 @@ namespace Game {
     {
         if (!animationList.empty()) {
             stopAllActions();
+            ActionInstant *act3=CallFunc::create(CC_CALLBACK_0(FruntCell::allAnimateComplete, this));
+            animationList.pushBack(act3);
             Sequence *seq = Sequence::create(animationList);
             runAction(seq);
             animationList.clear();
@@ -216,6 +218,11 @@ namespace Game {
         _layer->lightComplete((Layer *)this);
     }
     
+    void FruntCell::allAnimateComplete()
+    {
+        
+    }
+    
     void FruntCell::exchangeIndex()
     {
         setNowIndex(previseIndex.rowPos, previseIndex.columnPos);
@@ -339,9 +346,6 @@ namespace Game {
         fruntSp->setScaleX(this->getContentSize().width/fruntSp->getContentSize().width);
         fruntSp->setScaleY(this->getContentSize().height/fruntSp->getContentSize().height);
     }
-    
-    
-    
     
     bool FruntCell::onTouchBegan(Touch *pTouch, Event *pEvent)
     {

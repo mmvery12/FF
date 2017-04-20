@@ -76,6 +76,7 @@ namespace Game {
         void dropAnimationComplelte();
         void moveAndDeleteAnimateComplete();
         void lightAnimatimateComplete();
+        void allAnimateComplete();
         void exchangeIndex();
         void exchangeIndex(CellIndex index);
         
